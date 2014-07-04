@@ -70,6 +70,12 @@ is able to turn a contract into an object which provides the methods
 defined in the contract and connect them to the service implementation
 in the containing environment.
 
+Contracts have unique names and can be so referenced by a blueberry
+when communicating with a stalk.
+
+It is possible that when a blueberry requests a contract, the request
+will be denied; the blueberry must deal with this.
+
 ## BlueberrySeed
 
 Blueberries can either be created directly by other, containing, code
@@ -94,3 +100,61 @@ stream, dashboard, ...
 
 Each blueberry environment should provide all six punnets in an easy
 to use form.
+
+## BlueberryBrand
+
+A BlueberryBrand is a package of JavaScript class files, templates and
+resources together with explicit dependencies on specific framework
+implementations of the blueberry stack and rules about trusting and
+permissions all wrapped up and given a name and stored in the
+BlueberryMarket.
+
+The unique name is the one that can be referenced in a seed.
+
+## Blueberry
+
+A blueberry is a specific instance of a BlueberryBrand that has been
+initialized by assigning it a data object (or none for an empty
+Blueberry) and an existing state (or none for a clean Blueberry) and
+some screen real estate (although this may be virtual on a server).
+The blueberry will also be provided with a stalk by which it can
+obtain access to the services it needs.
+
+Each blueberry is wrapped in a BlueberryShell which mediates control
+between the blueberry and its environment.
+
+## Envelope
+
+Data items are generally best understood and interpreted by the
+individual BlueberryBrands that "own" them, i.e. create and edit them.
+
+However, Ziniki provides for an automated field-mapping system which
+allows arbitrary native (JSON) data objects to be re-mapped to more
+semantically rich Envelope objects.  Such an object represents a
+public interface through which (certain of its) fields can be
+manipulated.
+
+When in doubt about the availability and suitability of individual
+BlueberryBrands, a Blueberry may choose to request a piece of data as
+a specific Envelope type and render it with a suitable template.
+
+There is no guarantee that any given data object will conform to a
+given envelope type, but that can be enforced in the contextual rules
+(i.e. you can't nest a blueberry in a specific punnet unless its data
+matches a certain envelope).
+
+## Template
+
+In order to render HTML, I think the framework must provide "some"
+kind of templating library, even if it just to say that a particular
+method on a particular type of object can insert/update a DOM element.
+
+Templates are needed in order to ask a Punnet to render all of the
+blueberries in it using a certain Envelope.
+
+## BlueberryMarket
+
+It should be possible to retrieve any BlueberryBrand you desire from
+the BlueberryMarket.  Such retrieval should be done under
+"authorization" and record the user using the BlueberryBrand and the
+number of times it is retrieved for payment purposes.
