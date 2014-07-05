@@ -7,7 +7,7 @@ title: Packaging
 
 Because of the desire to share blueberries, and the idea that they are
 "fundamental units of composition", it is important to be able to
-package a BlueberryBrand to appear to be a single autonomous unit.  In
+package a BlueberryVariety to appear to be a single autonomous unit.  In
 practice, it may be necessary to deliver it in several distinct pieces
 (JavaScript, CSS, icons, images, etc), but the goal should be to allow
 all of those pieces to be stored "in the same place" and identified as

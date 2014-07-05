@@ -80,12 +80,12 @@ will be denied; the blueberry must deal with this.
 
 Blueberries can either be created directly by other, containing, code
 or they can be grown from seed.  A seed needs to specify the name of a
-"BlueberryBrand", essentially the "class" of Blueberry, together with
+"BlueberryVariety", essentially the "class" of Blueberry, together with
 the data (if applicable) and state (if any) to use to render the
 blueberry.
 
 Remember that a "card" (Blueberry) is an "application"
-(BlueberryBrand) showing "data" at a "state".
+(BlueberryVariety) showing "data" at a "state".
 
 ## BlueberryPunnet(s)
 
@@ -101,9 +101,9 @@ stream, dashboard, ...
 Each blueberry environment should provide all six punnets in an easy
 to use form.
 
-## BlueberryBrand
+## BlueberryVariety
 
-A BlueberryBrand is a package of JavaScript class files, templates and
+A BlueberryVariety is a package of JavaScript class files, templates and
 resources together with explicit dependencies on specific framework
 implementations of the blueberry stack and rules about trusting and
 permissions all wrapped up and given a name and stored in the
@@ -111,9 +111,9 @@ BlueberryMarket.
 
 The unique name is the one that can be referenced in a seed.
 
-## Blueberry
+## Blueberry (or BlueberryInstance)
 
-A blueberry is a specific instance of a BlueberryBrand that has been
+A `Blueberry` is a specific instance of a `BlueberryVariety` that has been
 initialized by assigning it a data object (or none for an empty
 Blueberry) and an existing state (or none for a clean Blueberry) and
 some screen real estate (although this may be virtual on a server).
@@ -126,7 +126,7 @@ between the blueberry and its environment.
 ## Envelope
 
 Data items are generally best understood and interpreted by the
-individual BlueberryBrands that "own" them, i.e. create and edit them.
+individual BlueberryVarieties that "own" them, i.e. create and edit them.
 
 However, Ziniki provides for an automated field-mapping system which
 allows arbitrary native (JSON) data objects to be re-mapped to more
@@ -135,7 +135,7 @@ public interface through which (certain of its) fields can be
 manipulated.
 
 When in doubt about the availability and suitability of individual
-BlueberryBrands, a Blueberry may choose to request a piece of data as
+BlueberryVarieties, a Blueberry may choose to request a piece of data as
 a specific Envelope type and render it with a suitable template.
 
 There is no guarantee that any given data object will conform to a
@@ -154,7 +154,7 @@ blueberries in it using a certain Envelope.
 
 ## BlueberryMarket
 
-It should be possible to retrieve any BlueberryBrand you desire from
+It should be possible to retrieve any BlueberryVariety you desire from
 the BlueberryMarket.  Such retrieval should be done under
-"authorization" and record the user using the BlueberryBrand and the
+"authorization" and record the user using the BlueberryVariety and the
 number of times it is retrieved for payment purposes.

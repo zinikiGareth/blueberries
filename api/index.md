@@ -82,6 +82,27 @@ implements a contract it must have the contract loaded.  However, if
 for any reason the blueberry finds it easier to ask for the contract
 explicitly by its definition it can do so.
 
+``
+provideService: ContractDefn defn, Object service -> Void
+``
+
+If this blueberry wants to provide services to its **children** only,
+it can call the `provideService` method.  This does not initially do
+anything, but if this blueberry creates children blueberries, and they
+request the specified contract, then this will be the service
+provider.
+
+The "service" object provided must implement **all** the methods of
+the specified contract.
+
+``
+denyServiceDefaults: Void
+``
+
+This method denies access to this blueberry's default services to any
+children.  In order for children to be able to find a service, it must
+have been specifically provided using the method above.
+
 ### Creating other blueberries
 
 From within a blueberry it is possible to create sub-blueberries.  It
@@ -93,17 +114,84 @@ instantiateBlueberry: BlueberrySeed seed -> BlueberryParent parent -> BlueberryH
 ``
 
 ``
-instantiateBlueberry: String brandName -> BlueberryParent parent -> BlueberryHandle handle
+instantiateBlueberry: String varietyName -> BlueberryParent parent -> BlueberryHandle handle
 ``
+
+### Creating punnets
+
+Because of the special place that punnets have in the Blueberry
+ecosystem, there are special methods for creating them, one for each
+of the six archetypes.
+
+While they return special return types, these are just richer versions
+of a BlueberryPunnetHandle (itself a richer version of a
+BlueberryHandle) and can always be treated as a BlueberryHandle or
+BlueberryPunnetHandle.
+
+``
+instantiateListPunnet: -> BlueberryListPunnetHandle
+``
+
+Because the punnets are part of the framework they are *always*
+created as local blueberries.
 
 ## BlueberryHandle
 
 A ``BlueberryHandle`` offers a parent blueberry an interface to its
-child blueberry and is paired with a BlueberryParent object for
-two-way communications.
+child blueberry.
 
-## BlueberryParent
+The main use of the BlueberryHandle is to add it to a model to be
+rendered by a template.  The template library will need to be enhanced
+to understand how to render a Blueberry in all the appropriate cases.
 
+Note that regardless of how a Blueberry is instantiated (locally, in
+an iframe or using an envelope/template combination) a BlueberryHandle
+will be returned and should operated in basically the same way, with
+the caveat that obviously no operations will be applicable on an
+"envelope-only" blueberry.
+
+### Communicating with a nested Blueberry
+
+If one blueberry instantiates another, it becomes the default place
+for the new Blueberry to look for services.  Likewise, any "services"
+that are provided by the nested Blueberry can be accessed by the
+parent.
+
+If the parent does _not_ specifically provide a service through the
+Stalk's provideService method, then it is looked up in the parent's
+containing environment until a match is found (if no match is found,
+or the first match is a "deny", null is returned).
+
+In order to communicate with a nested blueberry, an appropriate
+implementation of a contract interface must first be obtained:
+
+``
+requestContract: String name -> Interface contract
+requestContract: ContractDefn defn -> Interface contract
+``
+
+This is essentially the same operation as called by the blueberry on
+its own Stalk, but the difference is that this returns the "service
+half" of the contract.  This handle is the one that is used to make
+requests of (and/or provide data to) the child blueberry.
+
+The respond-to-request quarter of the contract is located in the
+service object that is attached to the stalk during initialization
+using the provideService method.
+
+## BlueberryPunnetHandle
+
+Because a `BlueberryPunnet` has the ability to store multiple nested
+blueberries, there is the need to add them to the punnet.  This can be
+done either by adding seeds and expecting the Punnet to grow them, or
+instantiating the Blueberry locally and then adding them
+
+``
+add: BlueberrySeed seed -> Void
+``
+``
+add: BlueberryHandle handle -> Void
+``
 
 ## Blueboard
 
@@ -134,7 +222,7 @@ can be called.
 ### Rendering Templates
 
 In general, it is expected that the blueberry framework libraries will
-support and use an HTML templating library and that the BlueberryBrand
+support and use an HTML templating library and that the BlueberryVariety
 will include a set of named templates.  This being the case, the
 Blueboard has a method to render a template into the available space
 as follows:
@@ -146,13 +234,10 @@ renderTemplate: String name, Hash model -> Void
 The template is looked up by name and rendered with the model
 provided.
 
-### Nesting Blueberries
+### Nesting Blueberries in the DOM
 
-In order to nest blueberries, it is possible to create new blueberries
-through the blueberry stalk and then taking the returned handles and
-inserting them into the model in a way that causes them to be inserted
-into the DOM.
+In order to nest blueberries visually, it is necessary to first create
+new blueberries through the blueberry stalk and then take the returned
+handles and insert them into the model so that the template finds them
+and renders them into the DOM.
 
-## create nested blueberries and punnets
-
-## do we need a separate render context?

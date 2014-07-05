@@ -5,7 +5,7 @@ title: Glossary
 
 ## Glossary
 
-BlueberryBrand
+BlueberryVariety
 BlueberrySeeds
 Card Container
 Card Identity

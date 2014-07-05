@@ -1,0 +1,11 @@
+In order to count as a valid blueberry demo, any demo must:
+
+* Define an overall "application"
+* Define at least three separate "blueberries"
+* Have one path that forces a significant chain of nested blueberries:
+Application/NestedBlueberry/IFrameBluebery/NestedBlueberry/EnvelopeData
+* Require templates
+* Require at least one of the BlueberryPunnets to be used
+* Include a pop-up window
+* Require at least one service to be provided inline
+* Require render and data services at a minimum

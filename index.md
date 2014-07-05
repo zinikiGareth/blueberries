@@ -67,12 +67,12 @@ seeds".
 
 These are simple JSON objects which identify at least:
 
-* A preferred "card identity" which we will call a "blueberryBrand".
+* A preferred "card identity" which we will call a `BlueberryVariety`.
 Basically this is a string identifier of a package of code which could
 be called upon in some contexts to render the data and provide other
 services.
 
-* A unique handle by which the application or the "blueberryBrand" can
+* A unique handle by which the application or the `BlueberryVariety` can
 locate and load the data associated with the object, either directly
 or mapped to an "envelope" which enables it to be interpreted in an
 abstract form without consulting the blueberry itself.
@@ -91,7 +91,7 @@ The containing environment then attempts to instantiate each of these
 blueberries and organize them on the screen real estate in their
 respective container groupings.  The exact mechanism by which the
 blueberries are instantiated depends on a number of factors including
-the availability and suitability of the blueberryBrand object.
+the availability and suitability of the BlueberryVariety object.
 
 ## Abstraction
 
