@@ -19,3 +19,13 @@ and a special div class to identify the CSS units.
 It also involves how we describe that packaging in the Ziniki world.
 
 Also how we upload files.
+
+Can we have flags?  Variables?
+
+We want to be able to say things like "mainBlueberry"
+
+Envelope/Template name to use in lieu of actually installing me
+Icon/JPEG to use to display instead of me (property of data object for
+more specific; generic version associated with the overall variety).
+
+We should be able to load metadata as JSON without loading whole package
