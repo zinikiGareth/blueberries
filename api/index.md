@@ -129,7 +129,12 @@ BlueberryHandle) and can always be treated as a BlueberryHandle or
 BlueberryPunnetHandle.
 
 ``
+instantiatePagePunnet: -> BlueberryPageunnetHandle
+instantiateBoardPunnet: -> BlueberryBoardPunnetHandle
 instantiateListPunnet: -> BlueberryListPunnetHandle
+instantiateQueuePunnet: -> BlueberryQueuePunnetHandle
+instantiateThreadPunnet: -> BlueberryThreadPunnetHandle
+instantiateFeedPunnet: -> BlueberryFeedPunnetHandle
 ``
 
 Because the punnets are part of the framework they are *always*
@@ -192,6 +197,20 @@ add: BlueberrySeed seed -> Void
 ``
 add: BlueberryHandle handle -> Void
 ``
+
+For punnets that can display envelope data in lieu of displaying
+actual cards, this method is used:
+
+``
+renderEnvelopeWithTemplate: String envelopeType, String templateName -> Void
+``
+
+This specifies that all blueberries that wish to be added to the
+punnet must implement the specified envelopeType and that the envelope
+data can be rendered with the given template.  Note that because this
+method is called from the containing blueberry, both of these objects
+are referenced from within the containing blueberry and thus no
+references are needed to the contents of the nested BlueberryVariety.
 
 ## Blueboard
 

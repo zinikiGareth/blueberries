@@ -5,36 +5,60 @@ title: Blueberry Concepts
 
 ## Introduction
 
-There are a whole bunch of moving parts that go together.
-We look at them one at a time.
+In order to create a blueberry application, it is necessary to
+assemble a stack of components from different sources and encourage
+them to communicate.  This section discusses these components at a
+conceptual level.
 
-The actual form of the APIs will reflect the object model(s) that
-are supported by the enclosing framework, but in each Blueberry
-implementation there should be some implementation of each of these
-concepts.
+Although it is not possible to precisely define an API in JavaScript
+(in particular, given the many different frameworks and object model
+implementations) the [API](/api) section attempts to define the key
+interfaces between the blueberry framework and individual blueberries.
 
 ## Application
 
-The application consists of an automatically generated HTML file that
-includes all the framework files and all of the code, templates and
-resources needed for the application.
+When we talk about an application it is in terms of how the overall
+package of code and resources is assembled.
 
-This requires a configuration object.
+In constructing an application, it is necessary to provide Ziniki with
+a set of vendor javascript files, core application files and/or a root
+blueberry.  Ziniki then packages this and automatically generates a
+root HTML file for distribution.
+
+In order to use blueberries, the application package must include a
+root BlueberryContainer and implementations of any Services that are
+to be made available to the instantiated Blueberries.
 
 ## BlueberryContainer
 
-The BlueberryContainer is a projection of the key framework which
-provides the root entry point through inversion of control and injects
-itself into the main code.
+If the application has a root JavaScript class, then it must at some
+point instantiate a BlueberryContainer.  The exact form of this
+instantiation depends on the underlying JavaScript being used.
 
-This needs to have all the controls to handle partial routes.
+If the application does not have a root Javascript class, then the
+BlueberryContainer essentially serves as the root class and is
+automatically instantiated.
 
-This needs to have to recover all the seeds for a particular recipe.
+The BlueberryContainer wraps the underlying framework and provides its
+services in a bi-directional fashion to any created blueberries.  Once
+instantiated, it can create nested blueberries, and, in particular,
+can create one main "central" blueberry if desired.
 
-This needs to have a method that instantiates blueberries from seeds.
+I'm not sure how it's going to work, but it is necessary that the
+BlueberryContainer handlers all of the "top-level" operations.  In
+particular, it needs to be able to handle the "URL fragments" that do
+routing within the JavaScript application and, where applicable,
+request blueberry seeds from the server and then instantiate the
+nested tree of blueberries.
 
-This is created as part of the initialization process and then creates
-the root blueberry, injecting itself into it.
+One possibility is that the routes are "statically" configured as part
+of the overall server-side configuration.  Another possibility would
+be to either require a root class that sets up the container and makes
+calls into it, or to require a configuration class which is called
+from within the BlueberryContainer's initialization process.
+
+In practice, it may be that what makes the most sense is to allow the
+initialization mechanism to be dependent on the underlying framework.
 
 ## BlueberryShell
 
@@ -95,11 +119,69 @@ locations it sees fit, but in particular it may be interesting in
 nesting some kind of "group" of blueberries in a single container.
 Such a container for blueberries is called a blueberry punnet.
 
-There are six well-known archetypes for punnets which are: list,
-stream, dashboard, ...
+There are six well-known archetypes for punnets which are: page,
+board, list, queue, thread, feed.
 
-Each blueberry environment should provide all six punnets in an easy
-to use form.
+### BlueberryPage
+
+A page is a very simple type of punnet; in fact, it's sufficiently
+simple that I'm not convinced it actually needs to exist as a Punnet
+per se.  But if it does, it requires a template to be provided, which
+contains references to individual (named) nested blueberries.  The
+number of nested blueberries must, of course, match the number of
+slots in the template.
+
+### BlueberryBoard
+
+A board is a simple punnet that contains nested blueberries that are
+essentially unordered and can be laid out in a two-dimensional grid.
+The metaphor for this is essentially an OS desktop with blueberries
+being able to be grown/shrunk/selected/moved/iconified etc.
+
+If the nested blueberries cannot be instantiated, then the board will
+generally show "icons" that can be selected to create some kind of
+"pop-up" that shows the contents of the card; however, applications
+should be designed in such a way that the use of boards is limited to
+the main container and not in nested iframes.
+
+### BlueberryList
+
+A list is an ordered set of items, usually in linear form.  Unlike a
+board, there is a commonality to the items which can generally be
+expressed through a contract.  Where the items implement an envelope
+contract, the list can be configured to required added items to match
+this contract and provide a template that can be used to render the
+envelope data for these items if the blueberries themselves cannot be
+instantiated.
+
+The ordering of the list is entirely defined by user interaction,
+probably using drag and drop.
+
+### BlueberryQueue
+
+A BlueberryQueue is similar to a list, except that the queue is
+ordered by some function on the card's envelope data.  This function
+must be provided to the BlueberryQueue when it is created.
+
+There is, I believe, an issue for both the list and the queue but more
+significantly for the queue, that when items in iframes are moved
+around the iframes need to be completely reloaded.  This being the
+case, both these punnets should be able to be moved into the
+"envelope-only" mode specified either by the user or during reordering
+operations.  The nested template (or chroming around the nested
+template) should then offer the opportunity to "rehydrate" the
+blueberry.
+
+### BlueberryThread
+
+A BlueberryThread is a punnet which supports threaded conversations of
+cards.  I'm not quite sure what the implications of this are.
+
+### BlueberryFeed
+
+A BlueberryFeed is a punnet like a list that has a set of nested items
+that are placed in a reverse-time-based sequence, possibly with a
+card-specific filter applied.
 
 ## BlueberryVariety
 
