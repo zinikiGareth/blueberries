@@ -41,9 +41,9 @@ method is invoked directly from within the BlueberryContainer library
 _not_ from user code.  This happens when a template decides it needs
 to add an existing blueberry into the DOM.
 
-``
+```javascript
 sr render: Blueboard space -> Void
-``
+```
 
 This is a complex process and contains much of the logic associated
 with the creation of blueberries and in particular with the decision
@@ -52,10 +52,10 @@ only way to render the blueberry is as a templated version of an
 envelope, then no Blueberry will be created at all, but the template
 will be instantiated in the DOM with the envelope version of the data.
 
-``
+```javascript
 sr renderMethod: -> String
 pr renderMethod: -> String
-``
+```
 
 It is often useful to know how the container has chosen to render the
 blueberry.  I'm not sure what **all** the answers are but here are
@@ -82,14 +82,14 @@ contract!
 The `(Re)Store` contract is the main way of moving data in an out of
 the system.  It has the following methods:
 
-``
+```javascript
 pr find: ID id -> Object value
 pr subscribe: ID id -> Object value
 pr findEnvelope: String envelopeType, ID id -> Object value
 pr subscribeEnvelope: String envelopeType, ID id -> Object value
 pr save: Object value -> Void
 pr recipe: String recipe, ID? start -> Tree<BlueberrySeed> seeds
-``
+```
 
 The `find` method recovers an object by ID.  Once recovered, the
 object is constant and is not updated by the system.  The object

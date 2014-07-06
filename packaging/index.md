@@ -34,16 +34,16 @@ expected to do this in terms of tool, UI, Ember, etc.  Secondly, the
 the uncertainty about the interface, the API is even more free flowing
 than before.]
 
-``
+```javascript
 createVariety: String uniqueName -> BlueberryVariety variety
-``
+```
 
 This is the root of the BlueberryVariety and establishes its name for
 us.
 
-``
+```javascript
 getVariety: String uniqueName -> BlueberryVariety variety
-``
+```
 
 This method recovers an existing Variety.  This can be useful either
 for editing or at runtime.  It should be possible for the
@@ -55,9 +55,9 @@ attachments: ones that we expect Ziniki to process and ones that we
 just want to push on up there.  This means that we have two separate
 methods.
 
-``
+```javascript
 attachAndProcess: String path, String processAs, File contents -> Void
-``
+```
 
 This method requests that we upload the given file under the given
 name and process it in a particular, specified way.  At the moment,
@@ -68,17 +68,17 @@ While the file will be delivered as part of the standard package, the
 path enables it to be repeatedly uploaded and overwritten and also to
 be recovered using `getFile`
 
-``
+```javascript
 attachFile: String path, String mimeType, File contents -> Void
-``
+```
 
 This enables an arbitrary file to be attached with a given path
 relative to the BlueberryVariety root and specifies its "mime" type
 for delivery.  It can be accessed from `<BlueberryRoot/path>`
 
-``
+```javascript
 getFile: String path -> File contents
-``
+```
 
 This recovers the (previously stored) path as a file.  If is was
 uploaded using `attachFile`, it is returned with the specified mime
@@ -89,9 +89,9 @@ It is also possible to recover files as if they were static files on
 the server by looking at the URL:
 `<server>/<blueberryVarietyName>/path`
 
-``
+```javascript
 setProperty: String property, String value -> Void
-``
+```
 
 It seems to me that a lot of the process of packaging involves adding
 additional meta data to the blueberry.  I'm not sure what all the
@@ -138,10 +138,10 @@ Popup boundary between them, both of them must trust the other.
 It seems that the simplest thing is to have a list property that can
 be retrieved and stored:
 
-``
+```javascript
 whoDoYouTrust: -> List<String> trustedVarieties
 trustVarieties: List<String> varieties -> Void
-``
+```
 
 ## Implementation Notes
 

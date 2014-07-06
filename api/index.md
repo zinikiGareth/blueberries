@@ -27,11 +27,11 @@ have no other effects on the code.
 
 The BlueberryReceptacle is the top-level entry point into a Blueberry:
 the "main" class.  The Receptacle has just one method on it which is
-the ``init`` method:
+the `init` method:
 
-``
+```javascript
 init: BlueberryStalk s -> Void
-``
+```
 
 The one argument is a BlueberryStalk which represents the Blueberry's
 sole access to the containing system.  In the init method the
@@ -48,7 +48,7 @@ provided through the Render contract.
 
 ## BlueberryStalk
 
-The ``BlueberryStalk`` interface is probably the single most important
+The `BlueberryStalk` interface is probably the single most important
 one in the scope of this API.  The Stalk is passed in to the blueberry
 when it is initialized and needs to be preserved and shared through
 the blueberry's code.
@@ -58,19 +58,19 @@ the blueberry's code.
 In order to get the blueberry under way, a number of methods are
 used to set up interfaces between the blueberry and its environment
 
-``
+```javascript
 requestContract: String name -> Interface contract
 requestContract: ContractDefn defn -> Interface contract
-``
+```
 
 Whichever of these methods is called, the result is a JavaScript
 object which provides the methods associated with the specified
 contract.  This object is good for the lifetime of the blueberry.
-While it is not necessary to call this during the ``init`` method,
+While it is not necessary to call this during the `init` method,
 this is generally the most useful practice.
 
 Not every contract desired by a blueberry will be implemented by its
-environment.  The BlueberryStalk may choose to return ``null`` rather
+environment.  The BlueberryStalk may choose to return `null` rather
 than a contract object, in which case the contract is not available.
 However, it is not acceptable for the BlueberryStalk to return a
 _partial_ contract: it must either return the whole contract or none
@@ -82,9 +82,9 @@ implements a contract it must have the contract loaded.  However, if
 for any reason the blueberry finds it easier to ask for the contract
 explicitly by its definition it can do so.
 
-``
+```javascript
 provideService: ContractDefn defn, Object service -> Void
-``
+```
 
 If this blueberry wants to provide services to its **children** only,
 it can call the `provideService` method.  This does not initially do
@@ -95,9 +95,9 @@ provider.
 The "service" object provided must implement **all** the methods of
 the specified contract.
 
-``
+```javascript
 denyServiceDefaults: Void
-``
+```
 
 This method denies access to this blueberry's default services to any
 children.  In order for children to be able to find a service, it must
@@ -109,13 +109,10 @@ From within a blueberry it is possible to create sub-blueberries.  It
 is possible either to do this using a seed or using the elements that
 constitute a blueberry.
 
-``
+```javascript
 instantiateBlueberry: BlueberrySeed seed -> BlueberryParent parent -> BlueberryHandle handle
-``
-
-``
 instantiateBlueberry: String varietyName -> BlueberryParent parent -> BlueberryHandle handle
-``
+```
 
 ### Creating punnets
 
@@ -128,21 +125,21 @@ of a BlueberryPunnetHandle (itself a richer version of a
 BlueberryHandle) and can always be treated as a BlueberryHandle or
 BlueberryPunnetHandle.
 
-``
+```javascript
 instantiatePagePunnet: -> BlueberryPageunnetHandle
 instantiateBoardPunnet: -> BlueberryBoardPunnetHandle
 instantiateListPunnet: -> BlueberryListPunnetHandle
 instantiateQueuePunnet: -> BlueberryQueuePunnetHandle
 instantiateThreadPunnet: -> BlueberryThreadPunnetHandle
 instantiateFeedPunnet: -> BlueberryFeedPunnetHandle
-``
+```
 
 Because the punnets are part of the framework they are *always*
 created as local blueberries.
 
 ## BlueberryHandle
 
-A ``BlueberryHandle`` offers a parent blueberry an interface to its
+A `BlueberryHandle` offers a parent blueberry an interface to its
 child blueberry.
 
 The main use of the BlueberryHandle is to add it to a model to be
@@ -170,10 +167,10 @@ or the first match is a "deny", null is returned).
 In order to communicate with a nested blueberry, an appropriate
 implementation of a contract interface must first be obtained:
 
-``
+```javascript
 requestContract: String name -> Interface contract
 requestContract: ContractDefn defn -> Interface contract
-``
+```
 
 This is essentially the same operation as called by the blueberry on
 its own Stalk, but the difference is that this returns the "service
@@ -191,19 +188,17 @@ blueberries, there is the need to add them to the punnet.  This can be
 done either by adding seeds and expecting the Punnet to grow them, or
 instantiating the Blueberry locally and then adding them
 
-``
+```javascript
 add: BlueberrySeed seed -> Void
-``
-``
 add: BlueberryHandle handle -> Void
-``
+```
 
 For punnets that can display envelope data in lieu of displaying
 actual cards, this method is used:
 
-``
+```javascript
 renderEnvelopeWithTemplate: String envelopeType, String templateName -> Void
-``
+```
 
 This specifies that all blueberries that wish to be added to the
 punnet must implement the specified envelopeType and that the envelope
@@ -223,9 +218,9 @@ a `div` within one of these).
 
 The key method of the render contract is, reasonably enough, `render`:
 
-``
+```javascript
 render: Blueboard space -> Void
-``
+```
 
 This method is called after the completion of the `init` method on the
 blueberry if it requested the `Render` contract and provides the
@@ -246,9 +241,9 @@ will include a set of named templates.  This being the case, the
 Blueboard has a method to render a template into the available space
 as follows:
 
-``
+```javascript
 renderTemplate: String name, Hash model -> Void
-``
+```
 
 The template is looked up by name and rendered with the model
 provided.
