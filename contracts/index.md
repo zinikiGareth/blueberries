@@ -23,7 +23,9 @@ initials `sr`, `sp`, `br` and `bp` to describe these four directions
 of communication.  Furthermore, any such invocation may either by
 asynchronous or request/response.  If the method has a denoted return
 type of "Void" it is asynchronous, otherwise it is expected to return
-a value.
+a value.  I'm not quite sure how errors are handled, but presumably
+"Void" methods actually return some context which can be used to
+handle errors if desired.
 
 Obviously, in conventional JavaScript parlance, this means that the
 methods need to provide a callback to handle the asynchronous nature
@@ -82,9 +84,46 @@ the system.  It has the following methods:
 
 ``
 pr find: ID id -> Object value
+pr subscribe: ID id -> Object value
 pr findEnvelope: String envelopeType, ID id -> Object value
-pr recipe: String recipe, ID? start -> Tree<BlueberrySeed> seeds
+pr subscribeEnvelope: String envelopeType, ID id -> Object value
 pr save: Object value -> Void
-sr update: -> Object value
+pr recipe: String recipe, ID? start -> Tree<BlueberrySeed> seeds
 ``
 
+The `find` method recovers an object by ID.  Once recovered, the
+object is constant and is not updated by the system.  The object
+returned is the raw object hash stored in the system.  Because of
+JavaScript semantics, it is to be expected that the immediate return
+will be a promise rather than the object, but that the promise will
+resolve to the value when ready.
+
+The `subscribe` method recovers an object by ID but also expresses
+interest in continuing to receive updates about the object.  Again,
+everything depends on the JavaScript framework, but it is to be
+expected that not the actual object but some "observable" will be
+returned that can have handlers attached to it that reflect the
+continuing updates.  In this case, the "first" update is not really
+any different to the others; it's just that it goes from
+"uninitialized" to the first value rather than from one value to the
+next.
+
+The `findEnvelope` and `subscribeEnvelope` methods correspond to
+`find` and `subscribe` but instead of returning the "raw" object
+hashes, they return a projection of the data through the requested
+envelope mapping.
+
+The `save` method asks the system to overwrite the current object
+value with the provided value.  Essentially, the workflow has to be to
+call `find` or `subscribe`, make modifications to the data until you
+are happy, and then call `save`.  `save` can fail if the object
+presented cannot be written for any number of reasons including if the
+object has not taken all of the available updates (using subscribe
+will generally ameliorate this problem).
+
+Finally, the `recipe` command attempts to recover a tree of blueberry
+seeds for instantiation.  While it's obvious to me how this would be
+implemented (it's a call to the Ziniki recipe method), it's less
+obvious what to do with the returned blueberry tree.  I think there
+probably needs to be a Punnet that can handle this case
+(BlueberryPagePunnet?) and that you just pass it the whole tree.
