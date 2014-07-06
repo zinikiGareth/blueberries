@@ -126,12 +126,10 @@ BlueberryHandle) and can always be treated as a BlueberryHandle or
 BlueberryPunnetHandle.
 
 ```javascript
-instantiatePagePunnet: -> BlueberryPageunnetHandle
-instantiateBoardPunnet: -> BlueberryBoardPunnetHandle
-instantiateListPunnet: -> BlueberryListPunnetHandle
-instantiateQueuePunnet: -> BlueberryQueuePunnetHandle
-instantiateThreadPunnet: -> BlueberryThreadPunnetHandle
-instantiateFeedPunnet: -> BlueberryFeedPunnetHandle
+instantiateNarrativePunnet: -> BlueberryNarrativePunnetHandle
+instantiateDiscoveryPunnet: -> BlueberryDiscoveryPunnetHandle
+instantiateWorkflowPunnet: -> BlueberryWorkflowPunnetHandle
+instantiateConversationPunnet: -> BlueberryConversatonPunnetHandle
 ```
 
 Because the punnets are part of the framework they are *always*
@@ -206,6 +204,12 @@ data can be rendered with the given template.  Note that because this
 method is called from the containing blueberry, both of these objects
 are referenced from within the containing blueberry and thus no
 references are needed to the contents of the nested BlueberryVariety.
+
+There is also (picking up and repeating a loose end from elsewhere),
+probably the need to support the notion of adding a "tree" of
+BlueberrySeeds to a punnet and expecting it to automatically grow them
+into a full UI.  This is needed to support the "Recipe" functionality
+in Ziniki.
 
 ## Blueboard
 

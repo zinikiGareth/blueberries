@@ -122,7 +122,7 @@ Such a container for blueberries is called a blueberry punnet.
 There are six well-known archetypes for punnets which are: page,
 board, list, queue, thread, feed.
 
-### BlueberryPage
+### BlueberryNarrativePunnet
 
 A page is a very simple type of punnet; in fact, it's sufficiently
 simple that I'm not convinced it actually needs to exist as a Punnet
@@ -131,57 +131,57 @@ contains references to individual (named) nested blueberries.  The
 number of nested blueberries must, of course, match the number of
 slots in the template.
 
-### BlueberryBoard
+### BlueberryDiscoveryPunnet
 
-A board is a simple punnet that contains nested blueberries that are
-essentially unordered and can be laid out in a two-dimensional grid.
-The metaphor for this is essentially an OS desktop with blueberries
-being able to be grown/shrunk/selected/moved/iconified etc.
+Discovery containers are used for information that can be retrieved
+and organized.  The exact organization depends on the provided
+template and controls.
 
-If the nested blueberries cannot be instantiated, then the board will
-generally show "icons" that can be selected to create some kind of
-"pop-up" that shows the contents of the card; however, applications
-should be designed in such a way that the use of boards is limited to
-the main container and not in nested iframes.
+A board allows the user to organize nested blueberries on a
+two-dimensional grid.  The metaphor for this is essentially an OS
+desktop with blueberries being able to be
+grown/shrunk/selected/moved/iconified etc.
 
-### BlueberryList
+A list is an ordered set of items, where the ordering is defined by
+user interaction, for example using drag and drop.
 
-A list is an ordered set of items, usually in linear form.  Unlike a
-board, there is a commonality to the items which can generally be
-expressed through a contract.  Where the items implement an envelope
-contract, the list can be configured to required added items to match
-this contract and provide a template that can be used to render the
-envelope data for these items if the blueberries themselves cannot be
-instantiated.
+A feed is a set of items which are ordered by something other than the
+user, e.g. chronology (the case which gives rise to the name feed) but
+can be sorted by name or other properties.
 
-The ordering of the list is entirely defined by user interaction,
-probably using drag and drop.
+For a list and a feed at least (less so for a board?), there is a
+commonality to the items which can generally be expressed by
+specifying a contract which all the items must implement.  If all the
+items in a feed implement an envelope contract, the feed can be
+configured to require that any items added to the feed must implement
+this contract and then they can be rendered using an appropriate
+template.
 
-### BlueberryQueue
+### BlueberryWorkflowPunnet
 
-A BlueberryQueue is similar to a list, except that the queue is
-ordered by some function on the card's envelope data.  This function
-must be provided to the BlueberryQueue when it is created.
+A BlueberryWorkflowPunnet is designed to support emergent workflows.
+As "tasks" are created and become the responsibility of a particular
+user, they are associated with a list somewhere in the system that is
+then rendered with a WorkflowPunnet.
 
-There is, I believe, an issue for both the list and the queue but more
-significantly for the queue, that when items in iframes are moved
-around the iframes need to be completely reloaded.  This being the
-case, both these punnets should be able to be moved into the
+The WorkflowPunnet should include operations and visual cues to make
+the manipulation of the workflow backlog easier and more systematic.
+
+### BlueberryConversationPunnet
+
+This is designed to support the nested use of threaded conversations.
+
+Not sure of the details.
+
+### Implementation Notes
+
+There is, I believe, an issue for punnets that when items in iframes
+are moved around the iframes need to be completely reloaded.  This
+being the case, these punnets should be able to be moved into an
 "envelope-only" mode specified either by the user or during reordering
 operations.  The nested template (or chroming around the nested
 template) should then offer the opportunity to "rehydrate" the
 blueberry.
-
-### BlueberryThread
-
-A BlueberryThread is a punnet which supports threaded conversations of
-cards.  I'm not quite sure what the implications of this are.
-
-### BlueberryFeed
-
-A BlueberryFeed is a punnet like a list that has a set of nested items
-that are placed in a reverse-time-based sequence, possibly with a
-card-specific filter applied.
 
 ## BlueberryVariety
 

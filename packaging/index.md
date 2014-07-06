@@ -87,7 +87,7 @@ processing characteristics.
 
 It is also possible to recover files as if they were static files on
 the server by looking at the URL:
-`<server>/<blueberryVarietyName>/path`
+`<server>/blueberries/<blueberryVarietyName>/<path>`
 
 ```javascript
 setProperty: String property, String value -> Void
@@ -150,7 +150,7 @@ not be unreasonable to have all the modules go into a module name that
 is the start of the blueberry name and to require all CSS rules to
 start with a class specifier that is the name of the module.  When
 instantiating a blueberry, the system can place a `<div
-class='variety`>` tag around the area to contain the blueberry.  This
+class='variety'>` tag around the area to contain the blueberry.  This
 should be possible to set up in such a way that it is consistent
 between development and production.
 
