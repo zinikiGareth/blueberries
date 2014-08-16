@@ -1,0 +1,6 @@
+<?xml version='1.0'?>
+
+<FlasckAssembly type='library' domain='blueberries.ziniki.org' name='blueberries' >
+    <Watch dir='code' prefix='blueberries' pattern='*.js' type='es6' />
+    <Watch dir='templates' pattern='*.hbs' type='hbs' />
+</FlasckAssembly>
