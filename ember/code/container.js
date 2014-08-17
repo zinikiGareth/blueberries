@@ -1,5 +1,6 @@
 import Flags from 'blueberries/flags';
 import Resolver from 'resolver';
+import Helpers from 'blueberries/helpers'
 
 for (var i in Flags) {
   if (Flags.hasOwnProperty(i))
@@ -16,5 +17,7 @@ var containerClass = Ember.Application.extend({
     this._super(arguments);
   }
 });
+
+Helpers.install();
 
 export default containerClass;
