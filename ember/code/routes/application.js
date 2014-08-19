@@ -1,14 +1,18 @@
 import RenderContext from 'blueberries/api/renderContext';
 
 var route = Ember.Route.extend({
+
   renderTemplate: function() {
+    // find out what the user wants to render
     var app = this.get('container').lookup('application:main');
     var root = app.get('rootcard');
-    var card = this.get('controller').ensureLaunched(root);
 
-    var renderContext = RenderContext.create({});
-    card.render(renderContext);
-    this.render(renderContext.get('template'), renderContext.get('model'));
+    // get/initialize the controller object
+    var controller = this.get('controller');
+    controller.set('rootCard', root);
+
+    // and show it
+    this.render('topcard');
   }
 });
 
