@@ -2,6 +2,7 @@ import Flags from './flags';
 import Patches from './patches';
 import Resolver from 'resolver';
 import HelperInitializer from './initializers/helpers';
+import Variety from './support/variety';
 
 for (var i in Flags) {
   if (Flags.hasOwnProperty(i))
@@ -29,7 +30,6 @@ var containerClass = Ember.Application.extend({
     path = path.substring(0, idx);
     var idx = path.lastIndexOf('/');
     var context = path.substring(0, idx);
-    console.log("origin =", origin, "context =", context, "domain =", domain);
     this.set('origin', origin + context);
     this.set('domain', domain);
   },
@@ -51,8 +51,40 @@ var containerClass = Ember.Application.extend({
       ]).then(function(card) {
         if (!forDom)
           forDom = self.get('varieties')[domain] = {};
-        return forDom[name] = requireModule(cname+'/card').default;
-      });
+          
+        // instantiate the card
+        var card = requireModule(cname+'/card').default;
+        
+        // find all the contracts and attach them to the variety
+        var contracts = define.allUnder(cname + "/contracts/");
+        console.log(name + " supports the following contracts: " + contracts);
+        var cimpls = {};
+        for (var i=0;i<contracts.length;i++) {
+          var n = contracts[i];
+          var cd = requireModule(n).default;
+          if (cd.create)
+            cimpls[cd.contractName] = cd;
+        }
+
+        // do the same for the services
+        var services = define.allUnder(cname + "/services/");
+        console.log(name + " offers the following services: " + services);
+        var simpls = {};
+        for (var i=0;i<services.length;i++) {
+          var n = services[i];
+          var sd = requireModule(n).default;
+          if (sd.create)
+            simpls[sd.serviceName] = sd;
+        }
+
+        var variety = Variety.create({
+          cardClass: card,
+          contracts: cimpls,
+          services: simpls
+        }); 
+        forDom[name] = variety;
+        return forDom[name];
+      }).then(null, function(e)  { console.log("error", e); });
     }
   }
 });

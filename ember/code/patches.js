@@ -8,12 +8,11 @@ var patches = {
           hash = self.ajaxOptions(url, type, hash);
 
           hash.success = function(json) {
-          console.log("success", url);
             Ember.run(null, resolve, json);
           };
 
           hash.error = function(jqXHR, textStatus, errorThrown) {
-          console.log("failure", url);
+          console.log("failed to load", url);
             Ember.run(null, reject, self.ajaxError(jqXHR));
           };
 
