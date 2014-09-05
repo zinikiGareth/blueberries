@@ -3,7 +3,7 @@ var patches = {
   // I think it should be more centrally available, but doesn't seem to be
       ajax: function(url, type, hash) {
         var self = this;
-
+        
         return new Ember.RSVP.Promise(function(resolve, reject) {
           hash = self.ajaxOptions(url, type, hash);
 
@@ -12,7 +12,7 @@ var patches = {
           };
 
           hash.error = function(jqXHR, textStatus, errorThrown) {
-          console.log("failed to load", url);
+            console.log("failed to load", url);
             Ember.run(null, reject, self.ajaxError(jqXHR));
           };
 

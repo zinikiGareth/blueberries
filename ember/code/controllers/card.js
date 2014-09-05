@@ -1,6 +1,7 @@
 var controller = Ember.Controller.extend({
   request: function() {
     console.log("in card controller.request", arguments);
+    
     var services = this.get('card.services');
     console.log('services =', services);
     if (services) {

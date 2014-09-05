@@ -1,12 +1,24 @@
+import Resolver from 'ember/resolver';
+import Oasis from 'oasis';
+import OasisLogger from 'oasis/logger';
+
 import Flags from './flags';
 import Patches from './patches';
-import Resolver from 'resolver';
 import HelperInitializer from './initializers/helpers';
 import Variety from './support/variety';
+
+OasisLogger.enable();
 
 for (var i in Flags) {
   if (Flags.hasOwnProperty(i))
     Ember.ENV[i] = Flags[i];
+}
+
+function contractFn(app, cap, m) {
+  return function(msg) {
+    var c = app.get('rootStalk.card.contracts')[cap];
+    c[m].apply(c[m], msg);
+  };
 }
 
 var containerClass = Ember.Application.extend({
@@ -32,9 +44,38 @@ var containerClass = Ember.Application.extend({
     var context = path.substring(0, idx);
     this.set('origin', origin + context);
     this.set('domain', domain);
+    
+    // TODO: should perhaps put all this in an initializer with deferReadiness enabled
+    var oasis = new Oasis();
+    this.set('oasis', oasis);
+    console.log('container.mode=', this.get('mode'));
+    var app = this;
+    var capabilities = this.get('capabilities');
+    if (capabilities) {
+      // This is the path we take if we are an Oasis Card
+      oasis.autoInitializeSandbox(Oasis.adapters);
+      var ports = {};
+      this.set('ports', ports);      
+      for (var i=0;i<capabilities.length;i++) {
+        var cap = capabilities[i];
+        console.log("connecting ", cap);
+        var ctr = requireModule(cap).default;
+        if (!ctr)
+          throw "Cannot load contract " + cap;
+        oasis.connect(cap).then(port => {
+          ports[cap] = port;
+          for (var m in ctr.inbound)
+            port.on(m, contractFn(app, cap, m));
+          console.log("connected port", port);
+        }, function(ex) {
+          console.log("failed", ex);
+        });
+      }
+    }
   },
   
-  getCard: function(domain, name) {
+  // TODO: ultimately cardalog should specify the correct canTrust logic, but for testing right now it's easier from here ...
+  getCard: function(domain, name, canTrust) {
     if (!domain)
       domain = this.get('domain');
     var self = this;
@@ -43,36 +84,38 @@ var containerClass = Ember.Application.extend({
       return Ember.RSVP.Promise.resolve(forDom[name]);
     else {
       var cname = "cards/" + domain + "/" + name;
-      return Promise.all([
-        // Get the HBS
-        Patches.ajax(self.get('origin') + "/" + cname + "/hbs-amd.js", "GET", {dataType: "script"}),
-        // Get the code
-        Patches.ajax(self.get('origin') + "/" + cname + "/es6-amd.js", "GET", {dataType: "script"})
-      ]).then(function(card) {
+      var trustOpt = canTrust?"?trust="+canTrust:"";
+      return Patches.ajax(self.get('origin') + "/" + cname + "/es6-amd.js"+trustOpt, "GET", {dataType: "text"}).then(function(script) {
         if (!forDom)
           forDom = self.get('varieties')[domain] = {};
-          
+        
+        define.loadInNamespace(cname, script);
+        
         // instantiate the card
-        var card = requireModule(cname+'/card').default;
+        var card = require.fromNamespace(cname, 'card').default;
+        if (Ember.typeOf(card) == 'object') {
+          forDom[name] = card;
+          return card;
+        }
         
         // find all the contracts and attach them to the variety
-        var contracts = define.allUnder(cname + "/contracts/");
+        var contracts = require.allUnder(cname, "contracts/");
         console.log(name + " supports the following contracts: " + contracts);
         var cimpls = {};
         for (var i=0;i<contracts.length;i++) {
           var n = contracts[i];
-          var cd = requireModule(n).default;
+          var cd = require.fromNamespace(cname, n).default;
           if (cd.create)
             cimpls[cd.contractName] = cd;
         }
 
         // do the same for the services
-        var services = define.allUnder(cname + "/services/");
+        var services = require.allUnder(cname, "services/");
         console.log(name + " offers the following services: " + services);
         var simpls = {};
         for (var i=0;i<services.length;i++) {
           var n = services[i];
-          var sd = requireModule(n).default;
+          var sd = require.fromNamespace(cname, n).default;
           if (sd.create)
             simpls[sd.serviceName] = sd;
         }
