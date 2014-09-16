@@ -1,0 +1,9 @@
+{{#each x in controller}}
+  <div style='cursor:pointer' {{action 'select' x.id}}>
+  {{#if controller.cardType}}
+    {{card variety=controller.cardType objectId=x.id mode=controller.mode}}
+  {{else}}
+    {{card yoyo=x}}
+  {{/if}}
+  </div>
+{{/each}}

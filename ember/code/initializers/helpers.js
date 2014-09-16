@@ -3,6 +3,7 @@ import Stalk from '../api/stalk';
 
 import CardController from '../controllers/card';
 import CardView from '../views/cardview';
+import PunnetView from '../views/punnet-view';
 
 var initializer = {
   name: 'helpers',
@@ -23,6 +24,7 @@ var initializer = {
     });
 
     Ember.Handlebars.helper('card', CardView);
+    Ember.Handlebars.helper('punnet', PunnetView);
   }
 };
 
