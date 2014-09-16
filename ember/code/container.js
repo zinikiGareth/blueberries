@@ -36,12 +36,12 @@ var containerClass = Ember.Application.extend({
     var path = this.get('url').pathname;
     var idx = path.lastIndexOf('/');
     path = path.substring(0, idx);
-    var idx = path.lastIndexOf('/');
+    idx = path.lastIndexOf('/');
     path = path.substring(0, idx);
-    var idx = path.lastIndexOf('/');
+    idx = path.lastIndexOf('/');
     var domain = path.substring(idx+1);
     path = path.substring(0, idx);
-    var idx = path.lastIndexOf('/');
+    idx = path.lastIndexOf('/');
     var context = path.substring(0, idx);
     this.set('origin', origin + context);
     this.set('domain', domain);
