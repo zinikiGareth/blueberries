@@ -1,42 +1,170 @@
-function copyMethods(methods, from, into) {
+function copyMethods(contractName, dir, methods, from, into) {
   if (methods) {
     for (var f in methods) {
-      if (methods.hasOwnProperty(f)) { // && 'function' === typeof from[f]) {
-        if (!from[f]) console.log("The method array", from, "does not implement", f);
-        into[f] = from[f];
+      if (methods.hasOwnProperty(f)) {
+        if (typeof from[f] !== 'function')
+          console.log("Method", f, "is not a function");
+        if (from[f])
+          into[f] = from[f];
+        else {
+          console.log("The contract " + contractName + " does not implement the " + dir + " method " + f);
+          into[f] = (function(f) { return function() { console.log("Undefined method:", contractName, f); throw new Error("Undefined method: " + contractName + " " + f); }; })(f);
+        }
       }
     }
   }
+}
+
+function createDirectSender(contract, meth, obf) {
+  return function() {
+    if (arguments.length != obf.input.length)
+      throw new Error("Incorrect number of arguments passed to method " + contract+"."+meth + " (expected " + obf.input.length + " but was passed " + arguments.length + ")");
+    var args = Ember.A();
+    args.pushObject(contract);
+    args.pushObject(meth);
+    for (var i=0;i<arguments.length;i++)
+      args.pushObject(arguments[i]);
+    return this.get('card.stalk.request').apply(this.get('card.stalk'), args);
+  }
+}
+
+function createDirectSubscriber(contract, meth, obf) {
+  return function() {
+    if (arguments.length != obf.input.length+1)
+      throw new Error("Incorrect number of arguments passed to method " + contract+"."+meth + " (expected " + (obf.input.length+1) + " but was passed " + arguments.length + ")");
+    var args = Ember.A();
+    args.pushObject(contract);
+    args.pushObject(meth);
+    for (var i=0;i<arguments.length;i++)
+      args.pushObject(arguments[i]);
+    return this.get('card.stalk.request').apply(this.get('card.stalk'), args);
+  }
+}
+
+// These are used in the container to proxy calls to the nested card and handle requests from it
+function inboundProxyFunction(port, name, m) {
+  return function() {
+    var x = [m].concat([Array.prototype.slice.call(arguments, 0)]);
+    port.send.apply(port, x);
+  }
+}
+
+function outboundHandlerFunction(stalk, name, m) {
+  return function (msg) {
+    console.log("received msg", msg);
+    stalk.request.apply(stalk, [name, m].concat(msg));
+  };
+}
+
+function outboundHandleRequest(stalk, name, m) {
+  return function (msg) {
+    console.log("received request", msg);
+    return stalk.request.apply(stalk, [name, m].concat(msg));
+  };
+}
+
+function handleDelivery(port, p, toWhom, delp) {
+  console.log(p, delp);
+  return function() {
+    console.log("sending", p, arguments);
+    port.send(p, [toWhom].concat(Array.prototype.slice.call(arguments, 0, delp.input.length)));
+  }
+}
+
+function outboundHandleSubscription(stalk, name, m, port, delivers) {
+  return function (msg) {
+    console.log("received request", msg);
+    var toWhom = msg[msg.length-1];
+    var handler = {};
+    for (var p in delivers)
+      if (delivers.hasOwnProperty(p))
+        handler[p] = handleDelivery(port, p, toWhom, delivers[p]); 
+//    msg[msg.length-1] = { insertItems: function(offset, items) { console.log("hello"); port.send("insertItems", [toWhom, offset, items]);  } };
+    msg[msg.length-1] = handler;
+    return stalk.request.apply(stalk, [name, m].concat(msg));
+  };
+}
+
+// These are used in the sandbox to proxy requests to the container and handle inbound messages
+function inboundHandlerFunction(port, name, m) {
+  return function() {
+    console.log("Need to handle request from container", arguments);
+//    var x = [m].concat([Array.prototype.slice.call(arguments, 0)]);
+//    port.send.apply(port, x);
+  }
+}
+
+function outboundProxyFunction(conn, name, m) {
+  return function (msg) {
+    return conn.then(function(port) {
+      console.log("sending msg", name, m, msg);
+      return port.send(m, msg);
+    });
+  };
+}
+
+function outboundProxyRequest(conn, name, m) {
+  return function (msg) {
+    return conn.then(function(port) {
+      console.log("sending request", name, m, msg);
+      return port.request(m, msg);
+    });
+  };
+}
+
+function cardSideProxySubscriptionFn(allDeliveries, p, delp) {
+  return function(args) {
+    var dude = allDeliveries[args[0]];
+    dude[p].apply(dude, args.slice(1, delp.input.length+1));
+  }
+}
+
+function outboundProxySubscriber(conn, name, m, delivers) {
+  var allDeliveries = [];
+  conn.then(function(port) {
+    for (var p in delivers)
+      if (delivers.hasOwnProperty(p))
+        port.on(p, cardSideProxySubscriptionFn(allDeliveries, p, delivers[p]));
+  });
+  return function () {
+    var deliverTo = arguments[arguments.length-1];
+    var msg = Array.prototype.slice.call(arguments, 0, arguments.length-1);
+    msg[arguments.length-1] = allDeliveries.length;
+    allDeliveries[allDeliveries.length] = deliverTo;
+    return conn.then(function(port) {
+      console.log("sending subscription request", name, m, msg);
+      return port.send(m, msg);
+    });
+  };
 }
 
 var contract = Ember.Object.extend({
   cardSide: function(hash) {
     // get the name of this contract so we can store it in the objects we generate
     var name = this.get('name');
+    if (!name)
+      throw new Error("contract " + this + " does not have a defined 'name'");
     
     // create a hash to use on create
     var initHash = {
       _toString: function() { return "cardSide/"+name; }
     };
+    if (hash.init)
+      initHash.init = hash.init;
 
     // copy across the "inbound" methods we are going to support
-    copyMethods(this.get('inbound'), hash, initHash);
+    copyMethods(name, 'inbound', this.get('inbound'), hash, initHash);
     
     // handle the "outbound" methods using "stalk.request"
     var ob = this.get('outbound');
     if (ob) {
       for (var f in ob) {
         if (ob.hasOwnProperty(f)) {
-          initHash[f] = function() {
-            if (arguments.length != ob[f].input.length)
-              throw "Incorrect number of arguments passed to method " + f + " (expected " + ob[f].input.length + " but was passed " + arguments.length + ")";
-            var args = Em.A();
-            args.pushObject(name);
-            args.pushObject(f);
-            for (var i=0;i<arguments.length;i++)
-              args.pushObject(arguments[i]);
-            this.get('card.stalk.request').apply(this.get('card.stalk'), args); // and arguments based on what we see in the hash
-          }
+          var obf = ob[f];
+          if (ob[f].delivers)
+            initHash[f] = createDirectSubscriber(name, f, obf);
+          else
+            initHash[f] = createDirectSender(name, f, obf); 
         }
       }
     }
@@ -96,42 +224,70 @@ var contract = Ember.Object.extend({
     // create the object, add the contract name & pass it back
     var ret = Ember.Object.extend(initHash); 
     ret.reopenClass({
-      serviceName: name
+      serviceName: name,
+      implementsContract: this
     });
+    console.log("created a service impl class for", name, "with methods", initHash, "as", Ember.guidFor(ret));
     return ret;
   },
   
-  proxy: function(stalk, port) {
+  // when creating a card in the containing environment which needs to be handled by Oasis,
+  // we create a "proxy" card which has all "proxy" contracts which send the instructions/requests over the port
+  cardProxy: function(stalk, port) {
     var name = this.get('name');
 
+    console.log("proxy for card ", name);
     var inbound = {};
-    for (var m in this.inbound)
-      if (this.inbound.hasOwnProperty(m)) {
+    for (var ibm in this.inbound)
+      if (this.inbound.hasOwnProperty(ibm)) {
         // TODO: consider/respect request semantics
-        inbound[m] = inboundFunction(port, name, m);
+        inbound[ibm] = inboundProxyFunction(port, name, ibm);
       }    
-    for (var m in this.outbound)
-      if (this.outbound.hasOwnProperty(m)) {
-        // TODO: consider/respect request semantics
-        port.on(m, outboundFunction(stalk, name, m));
+    for (var obm in this.outbound)
+      if (this.outbound.hasOwnProperty(obm)) {
+        if (this.outbound[obm].delivers)
+          port.on(obm, outboundHandleSubscription(stalk, name, obm, port, this.outbound[obm].delivers));
+        else if (this.outbound[obm].output)
+          port.onRequest(obm, outboundHandleRequest(stalk, name, obm));
+        else
+          port.on(obm, outboundHandlerFunction(stalk, name, obm));
       }
       
     return inbound;
+  },
+  
+  // when creating a card in the top-level oasis container, we need to "proxy" all the available services.
+  // we do this by creating a version of the service impl which uses the port
+  // because of the way oasis works, port here is a promise
+  serviceProxy: function(conn) {
+    var name = this.get('name');
+
+    var outbound = {};
+    for (var ibm in this.inbound)
+      if (this.inbound.hasOwnProperty(ibm)) {
+        // TODO: consider/respect request semantics
+        (function(m) {
+          conn.then(function(port) { port.on(m, inboundHandlerFunction(name, m)); });
+        })
+      }
+    for (var obm in this.outbound)
+      if (this.outbound.hasOwnProperty(obm)) {
+        if (this.outbound[obm].delivers)
+          outbound[obm] = outboundProxySubscriber(conn, name, obm, this.outbound[obm].delivers);
+        else if (this.outbound[obm].output && this.outbound[obm].output.length > 0)
+          outbound[obm] = outboundProxyRequest(conn, name, obm);
+        else
+          outbound[obm] = outboundProxyFunction(conn, name, obm);
+      }
+      
+    var ret = Ember.Object.extend(outbound);
+    ret.reopenClass({
+      serviceName: name,
+      implementsContract: this
+    });
+    console.log("created a service proxy for", name, "with methods", outbound, "as", Ember.guidFor(ret));
+    return ret;
   }
 });
-
-function inboundFunction(port, name, m) {
-  return function() {
-    var x = [m].concat([Array.prototype.slice.call(arguments, 0)]);
-    port.send.apply(port, x);
-  }
-}
-
-function outboundFunction(stalk, name, m) {
-  return function (msg) {
-    console.log("received msg", msg);
-    stalk.request.apply(stalk, [name, m].concat(msg));
-  };
-}
 
 export default contract;
