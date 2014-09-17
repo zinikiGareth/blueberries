@@ -5,33 +5,26 @@ import RestoreObject from '../contracts/restore/object';
 
 import CardController from '../controllers/card';
 
-function createCard(parent, me, app, domain, card, objectId, stateId, canTrust) {
-  // now attempt to lay our hands on the card variety
-  app.getCard(domain, card, canTrust).then(function (variety) {
-    // instantiate the card
-    var stalk = Stalk.create({
-      app: app,
-      view: me,
-      parent: parent
-    });
-
-    if (me.get('isTop'))
-      app.set('rootStalk', stalk);
-    else {
-      var iamCalled = me.get('called');
-      if (iamCalled) {
-        parent.bindChild(iamCalled, stalk);
-      }
-    }
-
-    if (Ember.typeOf(variety) == 'instance') // the card is trusted - render here
-      stalk.localRender(variety, domain, card, objectId, stateId);
-    else // use Oasis
-      stalk.oasisRender(variety);
-  },
-  function(e) {
-    console.log("error rendering card", e);
+function createStalk(parent, me, app, variety, domain, card, objectId, stateId) {
+  var stalk = Stalk.create({
+    app: app,
+    view: me,
+    parent: parent
   });
+
+  if (me.get('isTop'))
+    app.set('rootStalk', stalk);
+  else {
+    var iamCalled = me.get('called');
+    if (iamCalled) {
+      parent.bindChild(iamCalled, stalk);
+    }
+  }
+
+  if (Ember.typeOf(variety) == 'instance') // the card is trusted - render here
+    stalk.localRender(variety, domain, card, objectId, stateId);
+  else // use Oasis
+    stalk.oasisRender(variety);
 }
 
 var cardView = Ember.View.extend({
@@ -81,7 +74,15 @@ var cardView = Ember.View.extend({
     Ember.run.once(function() {
 //      console.log("trust " + renderCard + " =", canTrust);
       console.log(domain, renderCard, objectId);
-      createCard(self.get('parentView'), self, app, domain, renderCard.toLowerCase(), objectId, stateId, canTrust);
+      // now attempt to lay our hands on the card variety
+      renderCard = renderCard.toLowerCase();
+      app.getCard(domain, renderCard, canTrust).then(function (variety) {
+          createStalk(self.get('parentView'), self, app, variety, domain, renderCard, objectId, stateId);
+        },
+        function(e) {
+          console.log("error rendering card", e);
+        }
+      );
     });
   }.observes('variety').on('init'),
   
