@@ -36,14 +36,13 @@ var controller = Ember.ArrayController.extend({
           this.set('currentSelection', id);
           this.sendTo(cvs[i], 'blueberries/contracts/react/selectFromPunnet', 'select', id, true);
           this.sendTo(this.get('view.parentView'), 'blueberries/contracts/react/childPunnetSelection', 'selected', id);
-          console.log("iam =", this.get('view.called'));
           return;
         } 
       }
     }
   },
   sendTo: function(cvv, ctr, meth) {
-    var contracts = cvv.get('controller.card.contracts');
+    var contracts = cvv.get('controller.stalk.contracts');
     var obj = contracts[ctr];
     if (obj) {
       obj[meth].apply(obj, Array.prototype.slice.call(arguments, 3));

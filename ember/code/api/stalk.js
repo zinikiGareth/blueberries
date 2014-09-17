@@ -44,6 +44,7 @@ var StalkClass = Ember.Object.extend({
     var services = this.get('services');
     var controller = view.get('controller');
     controller.set('stalk', this);
+    controller.set('card', blueberry);
     this.set('controller', controller);
     this.set('card', blueberry);
 
