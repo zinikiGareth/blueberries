@@ -1,5 +1,12 @@
 import Oasis from 'oasis';
 
+function contractFn(app, cap, m) {
+  return function(msg) {
+    var c = app.get('rootStalk.card.contracts')[cap];
+    c[m].apply(c[m], msg);
+  };
+}
+
 var initializer = {
   name: 'sandbox',
 //  after: 'store',

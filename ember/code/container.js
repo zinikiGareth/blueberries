@@ -16,13 +16,6 @@ for (var i in Flags) {
     Ember.ENV[i] = Flags[i];
 }
 
-function contractFn(app, cap, m) {
-  return function(msg) {
-    var c = app.get('rootStalk.card.contracts')[cap];
-    c[m].apply(c[m], msg);
-  };
-}
-
 var containerClass = Ember.Application.extend({
   modulePrefix: 'blueberries',
   Resolver: Resolver,

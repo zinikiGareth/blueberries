@@ -96,8 +96,11 @@ function inboundHandlerFunction(port, name, m) {
 
 function outboundProxyFunction(conn, name, m) {
   return function (msg) {
+    console.log("Calling obf for", name, m, "with", msg);
+    debugger;
     return conn.then(function(port) {
       console.log("sending msg", name, m, msg);
+      debugger;
       return port.send(m, msg);
     });
   };
@@ -285,6 +288,7 @@ var contract = Ember.Object.extend({
           outbound[obm] = outboundProxyRequest(conn, name, obm);
         else
           outbound[obm] = outboundProxyFunction(conn, name, obm);
+        console.log("Created proxy for", name, obm, "as", outbound[obm]);
       }
       
     var ret = Ember.Object.extend(outbound);
