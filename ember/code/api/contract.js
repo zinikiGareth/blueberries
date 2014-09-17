@@ -185,17 +185,15 @@ var contract = Ember.Object.extend({
     var name = this.get('name');
     // create a hash to use on create
     var initHash = {
+      // get the stalk of a specified child
       child: function(name) {
         //noinspection JSPotentiallyInvalidUsageOfThis
-        var ret = this.get('card.controller.view.cardChildren')[name];
-        if (ret)
-          ret = ret.get('card');
-        return ret;
+        return this.get('stalk.controller.view.cardChildren')[name];
       },
       contract: function(child, contract) {
-        var card = this.child(child);
-        if (card)
-          return card.contracts[contract];
+        var stalk = this.child(child);
+        if (stalk)
+          return stalk.get('contracts')[contract];
         // else undefined
       },
       _toString: function() { return "cardSide/"+name; }

@@ -5,8 +5,8 @@ var controller = Ember.Controller.extend({
 //    console.log("Creating card controller", Ember.guidFor(this));
   },
   provideService: function(name) {
-    if (this.get('card.services')[name])
-      return this.get('card.services')[name];
+    if (this.get('stalk.offeredServices')[name])
+      return this.get('stalk.offeredServices')[name];
 
     return this.get('view.parentView.controller').provideService(name);
   },

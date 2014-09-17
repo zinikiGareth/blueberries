@@ -22,7 +22,12 @@ function connectContract(sandbox, contracts, serviceImpls, stalk, sn) {
 
 var StalkClass = Ember.Object.extend({
   init: function() {
+    // the service implementations that can be called from here
     this.set('services', {});
+    // the contracts implemented by this card
+    this.set('contracts', {});
+    // the services defined by this card locally
+    this.set('offeredServices', {});
   },
   service: function(name) {
     return this.get('services')[name];
@@ -35,29 +40,30 @@ var StalkClass = Ember.Object.extend({
   },
   localRender: function(variety, domain, card, objectId, stateId) {
     var view = this.get('view');
-    var blueberry = variety.get('cardClass').create({stalk: this, contracts: {}, services: {}});
+    var blueberry = variety.get('cardClass').create({stalk: this});
     var services = this.get('services');
     var controller = view.get('controller');
-    controller.set('card', blueberry);
+    controller.set('stalk', this);
+    this.set('controller', controller);
     this.set('card', blueberry);
 
     // create the contract objects which this card will *consume*
-    var cimpls = blueberry.get('contracts');
+    var cimpls = this.get('contracts');
     var contracts = variety.get('contracts');
     for (var ctr in contracts) {
       if (contracts.hasOwnProperty(ctr)) {
-        cimpls[ctr] = variety.get('contracts')[ctr].create({card: blueberry, stalk: this});
+        cimpls[ctr] = contracts[ctr].create({card: blueberry, stalk: this});
         services[ctr] = provideStalkService(cimpls[ctr], this.get('parent').get('controller'), ctr);
       }
     }
 
     // create the service objects which this card will *provide*
-    var simpls = blueberry.get('services');
+    var simpls = this.get('offeredServices');
     var vs = variety.get('services');
     for (var s in vs) {
       if (vs.hasOwnProperty(s)) {
-        var defn = variety.get('services')[s];
-        simpls[s] = defn.create({card: blueberry, implementsContract: defn.implementsContract});
+        var defn = vs[s];
+        simpls[s] = defn.create({card: blueberry, stalk: this, implementsContract: defn.implementsContract});
       }
     }
 
