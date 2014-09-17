@@ -58,34 +58,36 @@ var containerClass = Ember.Application.extend({
     // When we (lazily) request the service defn at the top level, we instantiate it ONCE and store it here
     this.set('serviceImpls', {});
 
-    var capabilities = this.get('capabilities'); // this is a pathetic test of sandbox mode and should be replaced with something more sensible
-    if (capabilities) {
+    debugger;
+    if (this.get('mode') === 'iframe') {
       // This is the path we take if we are an Oasis Card
-      capabilities = require.allMatching(/[^/*]\/contracts\//);
-      oasis.autoInitializeSandbox(Oasis.adapters);
       var ports = {};
-      this.set('ports', ports);      
+      this.set('ports', ports);
       var map = this.get('serviceDefns');
-      for (var i=0;i<capabilities.length;i++) {
-        (function(cap) {
-          console.log("connecting ", cap);
-          var ctr = require.fromNamespace(cap.namespace, cap.entry).default;
-          if (!ctr)
-            throw new Error("Cannot load contract " + cap);
-          var conn = oasis.connect(cap.entry).then(port => {
-            ports[cap.entry] = port;
-            for (var m in ctr.inbound)
-              if (ctr.inbound.hasOwnProperty(m))
-                port.on(m, contractFn(app, cap.entry, m));
-            console.log("connected port", port, "for", cap.entry);
-            return port;
-          }, function (ex) {
-            console.log("failed to connect", cap.entry, ex);
-            debugger;
-          });
-          map[cap.entry] = ctr.serviceProxy(conn);
-        })(capabilities[i]);
-      }
+      oasis.onInit = function(capabilities) {
+        for (var i=0;i<capabilities.length;i++) {
+          (function(cap) {
+            console.log("connecting ", cap);
+            var ctr = require.fromAny(cap).default;
+            if (!ctr)
+              throw new Error("Cannot load contract " + cap);
+            var conn = oasis.connect(cap).then(port => {
+              ports[cap] = port;
+              for (var m in ctr.inbound)
+                if (ctr.inbound.hasOwnProperty(m))
+                  port.on(m, contractFn(app, cap, m));
+              console.log("connected port", port, "for", cap);
+              return port;
+            }, function (ex) {
+              console.log("failed to connect", cap, ex);
+              debugger;
+            });
+            map[cap] = ctr.serviceProxy(conn);
+          })(capabilities[i]);
+        }
+        return Ember.RSVP.resolve(true);
+      };
+      oasis.autoInitializeSandbox(Oasis.adapters);
     } else {
       // This path is for a non-oasis card
       // Figure the available service implementations based on what's loaded
