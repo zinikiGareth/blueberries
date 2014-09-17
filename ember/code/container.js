@@ -5,7 +5,8 @@ import OasisLogger from 'oasis/logger';
 import Flags from './flags';
 import Patches from './patches';
 import HelperInitializer from './initializers/helpers';
-import Store from './support/store';
+import ContainerInitializer from './initializers/container';
+import SandboxInitializer from './initializers/sandbox';
 import Variety from './support/variety';
 
 OasisLogger.enable();
@@ -27,11 +28,32 @@ var containerClass = Ember.Application.extend({
   Resolver: Resolver,
   LOG_TRANSITIONS: true,
   LOG_TRANSITIONS_INTERNAL: true,
-  
-  varieties: {},
-  
+
+  oasis: null,
+  varieties: null,
+  serviceDefns: null,
+  serviceImpls: null,
+
   init: function() {
-    this._super(arguments);
+    this._super();
+    this.figureOriginAndDomain();
+
+    // Configure Oasis for either a container or a sandbox
+    var oasis = new Oasis();
+    this.set('oasis', oasis);
+
+    // This is the set of all card definitions
+    this.set('varieties', {});
+
+    // This is the set of definitions of services we load in (results of calling contract.serviceDefn)
+    this.set('serviceDefns', {});
+
+    // When we (lazily) request the service defn at the top level, we instantiate it ONCE and store it here
+    this.set('serviceImpls', {});
+
+  },
+
+  figureOriginAndDomain: function () {
     var origin = this.get('url').origin;
     var path = this.get('url').pathname;
     var idx = path.lastIndexOf('/');
@@ -45,56 +67,6 @@ var containerClass = Ember.Application.extend({
     var context = path.substring(0, idx);
     this.set('origin', origin + context);
     this.set('domain', domain);
-    
-    // TODO: should perhaps put all this in an initializer with deferReadiness enabled
-    var oasis = new Oasis();
-    this.set('oasis', oasis);
-    console.log('container.mode=', this.get('mode'));
-    var app = this;
-
-    // This is the set of definitions of services we load in (results of calling contract.serviceDefn)
-    this.set('serviceDefns', {});
-
-    // When we (lazily) request the service defn at the top level, we instantiate it ONCE and store it here
-    this.set('serviceImpls', {});
-
-    debugger;
-    if (this.get('mode') === 'iframe') {
-      // This is the path we take if we are an Oasis Card
-      var ports = {};
-      this.set('ports', ports);
-      var map = this.get('serviceDefns');
-      oasis.onInit = function(capabilities) {
-        for (var i=0;i<capabilities.length;i++) {
-          (function(cap) {
-            console.log("connecting ", cap);
-            var ctr = require.fromAny(cap).default;
-            if (!ctr)
-              throw new Error("Cannot load contract " + cap);
-            var conn = oasis.connect(cap).then(port => {
-              ports[cap] = port;
-              for (var m in ctr.inbound)
-                if (ctr.inbound.hasOwnProperty(m))
-                  port.on(m, contractFn(app, cap, m));
-              console.log("connected port", port, "for", cap);
-              return port;
-            }, function (ex) {
-              console.log("failed to connect", cap, ex);
-              debugger;
-            });
-            map[cap] = ctr.serviceProxy(conn);
-          })(capabilities[i]);
-        }
-        return Ember.RSVP.resolve(true);
-      };
-      oasis.autoInitializeSandbox(Oasis.adapters);
-    } else {
-      // This path is for a non-oasis card
-      // Figure the available service implementations based on what's loaded
-      this.loadServicesFrom("blueberries");
-      this.loadServicesFrom("blueberries/ziniki");
-      this.set('cardStore', Store.create({}));
-    }
   },
 
   // When we load a new file, we need to find all the service definitions under that and "install" them
@@ -204,5 +176,7 @@ var containerClass = Ember.Application.extend({
 });
 
 containerClass.initializer(HelperInitializer);
+containerClass.initializer(ContainerInitializer);
+containerClass.initializer(SandboxInitializer);
 
 export default containerClass;
