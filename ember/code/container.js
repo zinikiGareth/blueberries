@@ -43,7 +43,6 @@ var containerClass = Ember.Application.extend({
 
     // When we (lazily) request the service defn at the top level, we instantiate it ONCE and store it here
     this.set('serviceImpls', {});
-
   },
 
   figureOriginAndDomain: function () {

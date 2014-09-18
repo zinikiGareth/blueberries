@@ -5,22 +5,29 @@ function serviceSide(hash) {
   var name = this.get('name');
   // create a hash to use on create
   var initHash = {
+    init: function() {
+      this._super();
+      this.set('connections', []);
+      if (hash.init)
+        hash.init.apply(this);
+    },
+    // TODO: presumably we need to be able to remove them as well ...
+    addConnection: function(conn) {
+      this.get('connections').pushObject(conn);
+    },
     // get the stalk of a specified child
     child: function(name) {
+      debugger;
       //noinspection JSPotentiallyInvalidUsageOfThis
       return this.get('stalk.controller.view.cardChildren')[name];
     },
-    contract: function(child, contract) {
-      var stalk = this.child(child);
-      if (stalk)
-        return stalk.get('contracts')[contract];
-      // else undefined
+    applyToConnections: function(meth) {
+      this.get('connections').forEach(function (item, index) {
+        meth(item.get('contract'));
+      });
     },
     _toString: function() { return "cardSide/"+name; }
   };
-
-  if (hash.init)
-    initHash.init = hash.init;
 
   // copy across the "outbound" methods we are going to support in this service
   copyMethods(name, 'outbound', this.get('outbound'), hash, initHash);

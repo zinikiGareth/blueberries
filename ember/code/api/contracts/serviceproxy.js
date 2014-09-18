@@ -43,11 +43,8 @@ function outboundProxyRequest(conn, name, m) {
 
 function outboundProxyFunction(conn, name, m) {
   return function (msg) {
-    console.log("Calling obf for", name, m, "with", msg);
-    debugger;
     return conn.then(function(port) {
       console.log("sending msg", name, m, msg);
-      debugger;
       return port.send(m, msg);
     });
   };

@@ -8,7 +8,9 @@ function provideStalkService(ctr, controller, cname) {
     debugger;
   var conn = createServiceConnection(cname, theService, ctr);
   console.log("Setting stalk service for", cname, "to be", Ember.guidFor(conn), "from defn", Ember.guidFor(theService));
-  return conn.create({impl: theService, contract: ctr});
+  var ret = conn.create({impl: theService, contract: ctr});
+  theService.addConnection(ret);
+  return ret;
 }
 
 function connectContract(sandbox, contracts, serviceImpls, stalk, sn) {
@@ -134,11 +136,15 @@ var StalkClass = Ember.Object.extend({
     for (var sn in serviceDefns)
       if (serviceDefns.hasOwnProperty(sn)) {
         (function (boundSn) {
+          console.log("connecting up", boundSn);
           connectContract(sandbox, contracts, serviceDefns, stalk, boundSn).then(function(ctr) {
             services[boundSn] = provideStalkService(ctr, stalk.get('parent').get('controller'), boundSn);
+            console.log("now contracts=", contracts);
           });
         })(sn);
       }
+
+    console.log("contracts =", contracts);
   }
 });
 

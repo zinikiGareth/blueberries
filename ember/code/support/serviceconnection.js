@@ -1,12 +1,12 @@
-function createConn(ctr, impl, card) {
+function createConn(ctr, service, card) {
   "use strict";
 
   var hash = {};
-  console.log("Implements contract", impl.implementsContract);
-  if (!impl.implementsContract)
+  console.log("Implements contract", service.implementsContract);
+  if (!service.implementsContract)
     debugger;
-  for (var ib in impl.implementsContract.inbound) {
-    if (impl.implementsContract.inbound.hasOwnProperty(ib)) {
+  for (var ib in service.implementsContract.inbound) {
+    if (service.implementsContract.inbound.hasOwnProperty(ib)) {
       hash[ib] = (function(ib) {
         return function() {
           return this.get('contract').contracts[ctr][ib].apply(card, arguments);
@@ -14,11 +14,11 @@ function createConn(ctr, impl, card) {
       })(ib);
     }
   }
-  for (var ob in impl.implementsContract.outbound) {
-    if (impl.implementsContract.outbound.hasOwnProperty(ob)) {
+  for (var ob in service.implementsContract.outbound) {
+    if (service.implementsContract.outbound.hasOwnProperty(ob)) {
       hash[ob] = (function(ob) {
         return function() {
-          return this.get('impl').get(ob).apply(impl, arguments);
+          return this.get('impl').get(ob).apply(service, arguments);
         }
       })(ob);
     }
