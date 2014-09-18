@@ -20,7 +20,7 @@ var initializer = {
         optString = optString + "class='" + Handlebars.Utils.escapeExpression(options.hash.class) + "' ";
       if (options.hash.width)
         optString = optString + "width='" + Handlebars.Utils.escapeExpression(options.hash.width) + "' ";
-      return new Ember.Handlebars.SafeString("<img " + optString + "src='"+cardid +"images/" + escaped + "'>");
+      return new Ember.Handlebars.SafeString("<img " + optString + "src='"+app.get('origin')+"/"+cardid +"images/" + escaped + "'>");
     });
 
     Ember.Handlebars.helper('card', CardView);
