@@ -53,7 +53,22 @@ function outboundProxyFunction(conn, name, m) {
 function serviceProxy(conn) {
   var name = this.get('name');
 
-  var outbound = {};
+  var methods = {
+    init: function() {
+      this._super();
+      this.set('connections', []);
+    },
+    // TODO: presumably we need to be able to remove them as well ...
+    addConnection: function(conn) {
+      this.get('connections').pushObject(conn);
+    },
+    applyToConnections: function(meth) {
+      this.get('connections').forEach(function (item, index) {
+        meth(item.get('contract'));
+      });
+    }
+  };
+
   for (var ibm in this.inbound)
     if (this.inbound.hasOwnProperty(ibm)) {
       // TODO: consider/respect request semantics
@@ -64,20 +79,20 @@ function serviceProxy(conn) {
   for (var obm in this.outbound)
     if (this.outbound.hasOwnProperty(obm)) {
       if (this.outbound[obm].delivers)
-        outbound[obm] = outboundProxySubscriber(conn, name, obm, this.outbound[obm].delivers);
+        methods[obm] = outboundProxySubscriber(conn, name, obm, this.outbound[obm].delivers);
       else if (this.outbound[obm].output && this.outbound[obm].output.length > 0)
-        outbound[obm] = outboundProxyRequest(conn, name, obm);
+        methods[obm] = outboundProxyRequest(conn, name, obm);
       else
-        outbound[obm] = outboundProxyFunction(conn, name, obm);
-      console.log("Created proxy for", name, obm, "as", outbound[obm]);
+        methods[obm] = outboundProxyFunction(conn, name, obm);
+      console.log("Created proxy for", name, obm, "as", methods[obm]);
     }
 
-  var ret = Ember.Object.extend(outbound);
+  var ret = Ember.Object.extend(methods);
   ret.reopenClass({
     serviceName: name,
     implementsContract: this
   });
-  console.log("created a service proxy for", name, "with methods", outbound, "as", Ember.guidFor(ret));
+  console.log("created a service proxy for", name, "with methods", methods, "as", Ember.guidFor(ret));
   return ret;
 }
 

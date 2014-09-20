@@ -1,9 +1,11 @@
 import Oasis from 'oasis';
 
-function contractFn(app, cap, m) {
+function contractFn(app, cap) {
   return function(msg) {
-    var c = app.get('rootStalk.card.contracts')[cap];
-    c[m].apply(c[m], msg);
+    var service = app.provideService(cap);
+    if (!service)
+      return; // this shouldn't be possible, but it's always good to check
+    service.applyToConnections(conn => { debugger; conn.apply(conn, msg) });
   };
 }
 
@@ -35,7 +37,7 @@ var initializer = {
             ports[cap] = port;
             for (var m in ctr.inbound)
               if (ctr.inbound.hasOwnProperty(m))
-                port.on(m, contractFn(app, cap, m));
+                port.on(m, contractFn(app, cap));
             console.log("connected port", port, "for", cap);
             return port;
           }, function (ex) {
