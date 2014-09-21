@@ -77,35 +77,47 @@ var StalkClass = Ember.Object.extend({
       ready.cardReady(objectId, stateId);
     }
 
-    // call the render contract, if any
-    var rc = cimpls['blueberries/contracts/render'];
-    var tfn = null;
-    var model = null;
-    if (rc) {
-      var renderContext = RenderContext.create({controller: controller, mode: view.get('mode')});
-      rc.render(renderContext);
-      tfn = require.fromNamespace('cards/'+domain+'/'+card, 'templates/' + renderContext.get('template'));
-      model = renderContext.get('model');
-    } else {
-      try {
-        tfn = require.fromNamespace('cards/' + domain + '/' + card, 'templates/card');
-        model = Ember.Object.create({});
-      } catch (e) {
-        // fine, nothing to render
-      }
-    }
+    // if we are at the top level, we need to wait for the "readyPromise" to resolve
+    var ready;
+    if (view.get('isTop') && this.get('app.mode') === 'iframe')
+      ready = this.get('app.readyPromise.promise');
+    else
+      ready = Ember.RSVP.resolve({ mode: view.get('mode') });
 
-    // if we get a template back, render it
-    if (tfn) {
-      view.set('template', tfn);
-      view.set('model', model);
-      // TODO: currently, the template needs "{{view.model.PROP}}"; I would like it to be "{{PROP}}"
-      // The code suggests setting "context" might be a good idea, but that appears to be too powerful
-      // Maybe we need to set it closer to where we want to use it - i.e. somewhere down in the render/rerender chain
+    ready.then(function(hash) {
+      // call the render contract, if any
+      var rc = cimpls['blueberries/contracts/render'];
+      var tfn = null;
+      var model = null;
+      if (rc) {
+        var renderContext = RenderContext.create({controller: controller, mode: view.get('mode')});
+        rc.render(renderContext);
+        tfn = require.fromNamespace('cards/' + domain + '/' + card, 'templates/' + renderContext.get('template'));
+        model = renderContext.get('model');
+      } else {
+        try {
+          tfn = require.fromNamespace('cards/' + domain + '/' + card, 'templates/card');
+          model = Ember.Object.create({});
+        } catch (e) {
+          // fine, nothing to render
+        }
+      }
+
+      // TODO: we should also consider that the user might want to give a view back
+      // handle that in a similar way to how we handle the sandbox (I think)
+
+      // if we get a template back, render it
+      if (tfn) {
+        view.set('template', tfn);
+        view.set('model', model);
+        // TODO: currently, the template needs "{{view.model.PROP}}"; I would like it to be "{{PROP}}"
+        // The code suggests setting "context" might be a good idea, but that appears to be too powerful
+        // Maybe we need to set it closer to where we want to use it - i.e. somewhere down in the render/rerender chain
 //        me.set('context', me);
 //        console.log("rendering with controller=", me.get('controller'));
-      view.rerender();
-    }
+        view.rerender();
+      }
+    });
   },
   oasisRender: function(variety) {
     var services = this.get('services');
@@ -118,6 +130,7 @@ var StalkClass = Ember.Object.extend({
     var useOasis = variety;
     var serviceDefns = app.get('serviceDefns');
     var cs = Ember.A();
+    cs.push('blueberryConfigChannel');
     for (var s in serviceDefns)
       if (serviceDefns.hasOwnProperty(s))
         cs.push(s);
@@ -130,6 +143,9 @@ var StalkClass = Ember.Object.extend({
     wdiv.empty();
     wdiv.append(sandbox.el);
 
+    sandbox.connect("blueberryConfigChannel").then(port => {
+      port.send("setupCardRender", {mode:"yeah", size:"whatever", route: "One"});
+    });
     var stalk = this;
 
     // connect up the services

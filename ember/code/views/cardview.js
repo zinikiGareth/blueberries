@@ -23,8 +23,9 @@ function createStalk(parent, me, app, variety, domain, card, objectId, stateId) 
 
   if (Ember.typeOf(variety) == 'instance') // the card is trusted - render here
     stalk.localRender(variety, domain, card, objectId, stateId);
-  else // use Oasis
+  else /* if we are not already an iframe */ // use Oasis
     stalk.oasisRender(variety);
+  // TODO: else use envelopes
 }
 
 var cardView = Ember.View.extend({

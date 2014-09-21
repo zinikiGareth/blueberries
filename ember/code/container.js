@@ -28,6 +28,7 @@ var containerClass = Ember.Application.extend({
   serviceImpls: null,
 
   init: function() {
+    console.log('in container init');
     this._super();
     this.figureOriginAndDomain();
 
@@ -43,6 +44,9 @@ var containerClass = Ember.Application.extend({
 
     // When we (lazily) request the service defn at the top level, we instantiate it ONCE and store it here
     this.set('serviceImpls', {});
+
+    // Create a promise which we can both "then" and "resolve"
+    this.set('readyPromise', Ember.RSVP.defer());
   },
 
   figureOriginAndDomain: function () {

@@ -30,6 +30,16 @@ var initializer = {
       for (var i=0;i<capabilities.length;i++) {
         (function(cap) {
           console.log("connecting ", cap);
+          if (cap === 'blueberryConfigChannel') {
+            oasis.connect(cap).then(port => {
+              port.on("setupCardRender", function(hash) {
+                console.log("set up card to render with", hash);
+                var readyPromise = app.get('readyPromise');
+                readyPromise.resolve(hash);
+              });
+            });
+            return;
+          }
           var ctr = require.fromAny(cap).default;
           if (!ctr)
             throw new Error("Cannot load contract " + cap);
