@@ -23,16 +23,15 @@ var service = ContractDefn.serviceSide({
     this.set('requestor', reqP);
   },
   // TODO: I think there also wants to be an "onCreateProxy" method here to create the necessary setup 
-  fromResource: function(resource/*, params? */, deliverTo) {
+  fromResource: function(resource/*, params? */, ofType, deliverTo) {
     var store = this.get('app.cardStore');
     console.log("Hey, fromResource got called for", resource);
     this.get('requestor').then(function (req) {
-      console.log("We have requestor", req);
 
       var cnt = 0;
       // We are somewhat hamstrung by the fact that we don't have the correct list semantics across the zinc protocol, either
       var m = req.subscribe(resource, function (r) {
-        var pl = r['chaddy.Queue'];
+        var pl = r[ofType];
         
         // Put the items in the store first
         for (var pi=0;pi<pl.length;pi++)

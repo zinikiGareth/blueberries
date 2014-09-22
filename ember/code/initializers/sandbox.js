@@ -5,7 +5,7 @@ function contractFn(app, cap) {
     var service = app.provideService(cap);
     if (!service)
       return; // this shouldn't be possible, but it's always good to check
-    service.applyToConnections(conn => { debugger; conn.apply(conn, msg) });
+    service.applyToConnections(conn => { conn.apply(conn, msg) });
   };
 }
 
