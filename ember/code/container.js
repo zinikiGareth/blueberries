@@ -47,6 +47,7 @@ var containerClass = Ember.Application.extend({
 
     // Create a promise which we can both "then" and "resolve"
     this.set('readyPromise', Ember.RSVP.defer());
+    this.set('sandboxPromise', Ember.RSVP.defer());
   },
 
   figureOriginAndDomain: function () {

@@ -1,11 +1,13 @@
 import Oasis from 'oasis';
 
-function contractFn(app, cap) {
+function contractFn(app, cap, m) {
   return function(msg) {
     var service = app.provideService(cap);
-    if (!service)
-      return; // this shouldn't be possible, but it's always good to check
-    service.applyToConnections(conn => { conn.apply(conn, msg) });
+    if (!service) {
+      return;
+    } // this shouldn't be possible, but it's always good to check
+    debugger;
+    service.applyToConnections(conn => { conn[m].apply(conn, msg) });
   };
 }
 
@@ -57,10 +59,10 @@ var initializer = {
           map[cap] = ctr.serviceProxy(conn);
         })(capabilities[i]);
       }
-      return Ember.RSVP.resolve(true);
+      return app.get('sandboxPromise.promise'); // this will be resolved when the card is ready
     };
 
-    // and connect everything up
+    // We allow the connection to go ahead, but it will stall based on the onInit promise, which is tied to the card
     oasis.autoInitializeSandbox(Oasis.adapters);
   }
 };

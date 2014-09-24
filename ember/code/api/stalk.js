@@ -14,12 +14,14 @@ function provideStalkService(ctr, controller, cname) {
 }
 
 function connectContract(sandbox, contracts, serviceImpls, stalk, sn) {
-  return sandbox.connect(sn).then(function (port) {
+  var defer = Ember.RSVP.defer();
+  contracts[sn] = defer.promise;
+  sandbox.connect(sn).then(function (port) {
     var si = serviceImpls[sn];
     console.log("connected to the sandbox for", sn, "using port", port);
-    contracts[sn] = si.implementsContract.cardProxy(stalk, port);
-    return contracts[sn];
-  });
+    defer.resolve(si.implementsContract.cardProxy(stalk, port));
+  }, function (ex) { defer.reject(ex); });
+  return contracts[sn];
 }
 
 var StalkClass = Ember.Object.extend({
@@ -33,6 +35,14 @@ var StalkClass = Ember.Object.extend({
   },
   service: function(name) {
     return this.get('services')[name];
+  },
+  contractFor: function(name) {
+    var contracts = this.get('contracts');
+    var rc = contracts[name];
+    if (rc)
+      return rc;
+    else
+      return Ember.RSVP.resolve(null);
   },
   request: function() {
     var s = this.get('services')[arguments[0]];
@@ -70,21 +80,27 @@ var StalkClass = Ember.Object.extend({
       }
     }
 
-    // OK, tell the card it's ready, if it's interested
-    var ready = cimpls['blueberries/contracts/react/ready'];
-    console.log("card", domain, card, Ember.guidFor(view), "has ready contract =", ready, 'cimpls=', cimpls);
-    if (ready) {
-      ready.cardReady(objectId, stateId);
-    }
 
     // if we are at the top level, we need to wait for the "readyPromise" to resolve
-    var ready;
-    if (view.get('isTop') && this.get('app.mode') === 'iframe')
-      ready = this.get('app.readyPromise.promise');
-    else
-      ready = Ember.RSVP.resolve({ mode: view.get('mode') });
+    var readyPromise;
+    if (view.get('isTop') && this.get('app.mode') === 'iframe') {
+      // In this case, the ready contract will be called from the other side of the Oasis boundary
+      readyPromise = this.get('app.readyPromise.promise');
 
-    ready.then(function(hash) {
+      // Now we need to enable sandbox connection if applicable
+      this.get('app.sandboxPromise.resolve')(true);
+    } else {
+      // OK, tell the card it's ready, if it's interested
+      var ready = cimpls['blueberries/contracts/react/ready'];
+      console.log("card", domain, card, Ember.guidFor(view), "has ready contract =", ready, 'cimpls=', cimpls);
+      if (ready) {
+        ready.cardReady(objectId, stateId);
+      }
+
+      readyPromise = Ember.RSVP.resolve({ mode: view.get('mode') });
+    }
+
+    readyPromise.then(function(hash) {
       // call the render contract, if any
       var rc = cimpls['blueberries/contracts/render'];
       var tfn = null;
@@ -119,13 +135,13 @@ var StalkClass = Ember.Object.extend({
       }
     });
   },
-  oasisRender: function(variety) {
+  oasisRender: function(variety, objectId, stateId) {
     var services = this.get('services');
     var app = this.get('app');
     var view = this.get('view');
-    var oasisCard = Ember.Object.create({stalk: this, contracts: {}});
-    var contracts = oasisCard.get('contracts');
-    this.set('card', oasisCard);
+    var oasisBerry = Ember.Object.create({stalk: this});
+    var contracts = this.get('contracts');
+    this.set('card', oasisBerry);
 
     var useOasis = variety;
     var serviceDefns = app.get('serviceDefns');
@@ -161,6 +177,13 @@ var StalkClass = Ember.Object.extend({
       }
 
     console.log("contracts =", contracts);
+    this.contractFor('blueberries/contracts/react/ready').then(function (ready) {
+//      console.log("card", domain, card, Ember.guidFor(view), "has ready contract =", ready, 'cimpls=', cimpls);
+      if (ready) {
+        ready.cardReady(objectId, stateId);
+      }
+    })
+
   }
 });
 

@@ -54,16 +54,18 @@ var cardView = Ember.View.extend({
       domain = app.get('domain');
     if (this.get('yoyo')) {
       renderCard = this.get('yoyo.card');
-      canTrust = this.get('yoyo.trust');
       objectId = this.get('yoyo.id');
       stateId = this.get('yoyo.cardState');
+      canTrust = this.get('yoyo.trust');
+      if (!canTrust)
+        canTrust = this.get('trust');
     } else {
       console.log("card has init", this);
       console.log("card objectid", this.get('objectId'));
       renderCard = this.get('variety');
-      canTrust = this.get('trust');
       objectId = this.get('objectId');
       stateId = this.get('cardState');
+      canTrust = this.get('trust');
     }
     if (domain == null || renderCard == null) {
       console.log("Cannot display card without valid domain and card", domain, renderCard);
@@ -86,17 +88,19 @@ var cardView = Ember.View.extend({
       );
     });
   }.observes('variety').on('init'),
-  
+
+
   objectChanged: function() {
-   // TODO: this handles the case where the expanded queue has its underlying id changed
-   // we want to cancel any existing subscription and start a new one on the new objectId
     var store = this.get('app').get('cardStore');
-    var cimpls = this.get('controller.stalk.contracts');
-    var rc = cimpls['blueberries/contracts/react/ready'];
     var objectId = this.get('objectId');
-    console.log("object changed", objectId, rc);
-    if (rc && objectId) {
-      rc.cardReady(objectId, null);
+    // TODO: this handles the case where the expanded queue has its underlying id changed
+    // we want to cancel any existing subscription and start a new one on the new objectId
+    if (objectId) {
+      this.get('controller.stalk').contractFor('blueberries/contracts/react/ready').then(function (rc) {
+        if (rc) {
+          rc.cardReady(objectId, null);
+        }
+      });
     }
   }.observes('objectId'),
   

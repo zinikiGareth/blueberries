@@ -74,7 +74,7 @@ function serviceProxy(conn) {
       // TODO: consider/respect request semantics
       (function(m) {
         conn.then(function(port) { port.on(m, inboundHandlerFunction(name, m)); });
-      })
+      })();
     }
   for (var obm in this.outbound)
     if (this.outbound.hasOwnProperty(obm)) {

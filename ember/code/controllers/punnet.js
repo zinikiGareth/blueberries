@@ -42,11 +42,11 @@ var controller = Ember.ArrayController.extend({
     }
   },
   sendTo: function(cvv, ctr, meth) {
-    var contracts = cvv.get('controller.stalk.contracts');
-    var obj = contracts[ctr];
-    if (obj) {
-      obj[meth].apply(obj, Array.prototype.slice.call(arguments, 3));
-    }
+    cvv.get('controller.stalk').contractFor(ctr).then(function (obj) {
+      if (obj) {
+        obj[meth].apply(obj, Array.prototype.slice.call(arguments, 3));
+      }
+    });
   }
 });
 
