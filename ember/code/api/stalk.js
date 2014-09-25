@@ -91,10 +91,12 @@ var StalkClass = Ember.Object.extend({
       this.get('app.sandboxPromise.resolve')(true);
     } else {
       // OK, tell the card it's ready, if it's interested
-      var ready = cimpls['blueberries/contracts/react/ready'];
-      console.log("card", domain, card, Ember.guidFor(view), "has ready contract =", ready, 'cimpls=', cimpls);
-      if (ready) {
-        ready.cardReady(objectId, stateId);
+      var currentStateP = cimpls['blueberries/contracts/restore/currentState'];
+      if (currentStateP) {
+        currentStateP.then(function(currentState) {
+          console.log("card", domain, card, Ember.guidFor(view), "has ready contract =", currentState);
+          currentState.setState(objectId, stateId);
+        });
       }
 
       readyPromise = Ember.RSVP.resolve({ mode: view.get('mode') });
@@ -177,13 +179,12 @@ var StalkClass = Ember.Object.extend({
       }
 
     console.log("contracts =", contracts);
-    this.contractFor('blueberries/contracts/react/ready').then(function (ready) {
+    this.contractFor('blueberries/contracts/restore/currentState').then(function (currentState) {
 //      console.log("card", domain, card, Ember.guidFor(view), "has ready contract =", ready, 'cimpls=', cimpls);
-      if (ready) {
-        ready.cardReady(objectId, stateId);
+      if (currentState) {
+        currentState.setState(objectId, stateId);
       }
     })
-
   }
 });
 
