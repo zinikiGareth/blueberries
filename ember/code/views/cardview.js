@@ -102,9 +102,9 @@ var cardView = Ember.View.extend({
     // TODO: this handles the case where the expanded queue has its underlying id changed
     // we want to cancel any existing subscription and start a new one on the new objectId
     if (objectId) {
-      this.get('controller.stalk').contractFor('blueberries/contracts/react/ready').then(function (rc) {
+      this.get('controller.stalk').contractFor('blueberries/contracts/restore/currentState').then(function (rc) {
         if (rc) {
-          rc.cardReady(objectId, null);
+          rc.setState(objectId, null);
         }
       });
     }
