@@ -1,9 +1,9 @@
 {{#each x in controller}}
   <div style='cursor:pointer' {{action 'select' x.id}}>
   {{#if controller.cardType}}
-    {{card variety=controller.cardType objectId=x.id mode=controller.mode trust=controller.view.trust envelope='task'}}
+    {{card variety=controller.cardType objectId=x.id mode=controller.mode trust=controller.view.trust envelope=controller.view.envelope}}
   {{else}}
-    {{card yoyo=x trust=controller.view.trust envelope='task'}}
+    {{card yoyo=x trust=controller.view.trust envelope=controller.view.envelope}}
   {{/if}}
   </div>
 {{/each}}

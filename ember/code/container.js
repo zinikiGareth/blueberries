@@ -169,6 +169,13 @@ var containerClass = Ember.Application.extend({
       });
       return variety;
     }).then(null, function(e)  { console.log("error", e); });
+  },
+
+  getEnvelopeFor: function(name) {
+    var template = require.fromNamespace('', name+'/envelope');
+    return Ember.RSVP.resolve({
+      template: template
+    });
   }
 });
 

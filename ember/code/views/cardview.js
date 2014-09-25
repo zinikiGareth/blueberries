@@ -26,13 +26,15 @@ function createStalk(parent, me, app, variety, envelope, domain, card, objectId,
   else if (app.get('mode') !== 'iframe') // use Oasis
     stalk.oasisRender(variety, objectId, stateId);
   else
-    stalk.envelopeRender(envelope, variety, objectId, stateId);
+    stalk.envelopeRender(envelope, variety, objectId);
 }
 
 var cardView = Ember.View.extend({
   init: function() {
     this._super(arguments);
     Ember.guidFor(this);
+
+    this.set('classNames', ['cardView']);
 
     var app = this.get('container').lookup('application:main');
     this.set('app', app);
@@ -97,7 +99,6 @@ var cardView = Ember.View.extend({
 
 
   objectChanged: function() {
-    var store = this.get('app').get('cardStore');
     var objectId = this.get('objectId');
     // TODO: this handles the case where the expanded queue has its underlying id changed
     // we want to cancel any existing subscription and start a new one on the new objectId
@@ -113,7 +114,7 @@ var cardView = Ember.View.extend({
   bindChild: function(name, stalk) {
     this.get('cardChildren')[name] = stalk;
   },
-  classNames: ['cardView'],
+  classNames: null,
   toString: function() {
     return "a card view";
   }
