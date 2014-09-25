@@ -65,8 +65,9 @@ var StalkClass = Ember.Object.extend({
     var contracts = variety.get('contracts');
     for (var ctr in contracts) {
       if (contracts.hasOwnProperty(ctr)) {
-        cimpls[ctr] = contracts[ctr].create({card: blueberry, stalk: this});
-        services[ctr] = provideStalkService(cimpls[ctr], this.get('parent').get('controller'), ctr);
+        var ci = contracts[ctr].create({card: blueberry, stalk: this});
+        cimpls[ctr] = Ember.RSVP.resolve(ci);
+        services[ctr] = provideStalkService(ci, this.get('parent').get('controller'), ctr);
       }
     }
 
@@ -91,18 +92,25 @@ var StalkClass = Ember.Object.extend({
       this.get('app.sandboxPromise.resolve')(true);
     } else {
       // OK, tell the card it's ready, if it's interested
-      var ready = cimpls['blueberries/contracts/react/ready'];
-      console.log("card", domain, card, Ember.guidFor(view), "has ready contract =", ready, 'cimpls=', cimpls);
-      if (ready) {
-        ready.cardReady(objectId, stateId);
+      var readyP = cimpls['blueberries/contracts/react/ready'];
+      if (readyP) {
+        readyP.then(function(ready) {
+          console.log("card", domain, card, Ember.guidFor(view), "has ready contract =", ready);
+          ready.cardReady(objectId, stateId);
+        });
       }
 
       readyPromise = Ember.RSVP.resolve({ mode: view.get('mode') });
     }
 
-    readyPromise.then(function(hash) {
-      // call the render contract, if any
-      var rc = cimpls['blueberries/contracts/render'];
+    // call the render contract, if any
+    var rcp = cimpls['blueberries/contracts/render'];
+    if (!rcp)
+      rcp = Ember.RSVP.resolve(null);
+
+    Ember.RSVP.all([rcp, readyPromise]).then(function(arr) {
+      var rc = arr[0];
+      var hash = arr[1];
       var tfn = null;
       var model = null;
       if (rc) {
@@ -184,6 +192,9 @@ var StalkClass = Ember.Object.extend({
       }
     })
 
+  },
+  envelopeRender: function(envelope, variety) {
+    console.log("hello envelope", envelope, variety);
   }
 });
 

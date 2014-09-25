@@ -6,7 +6,6 @@ function contractFn(app, cap, m) {
     if (!service) {
       return;
     } // this shouldn't be possible, but it's always good to check
-    debugger;
     service.applyToConnections(conn => { conn[m].apply(conn, msg) });
   };
 }
@@ -48,8 +47,10 @@ var initializer = {
           var conn = oasis.connect(cap).then(port => {
             ports[cap] = port;
             for (var m in ctr.inbound)
-              if (ctr.inbound.hasOwnProperty(m))
-                port.on(m, contractFn(app, cap));
+              if (ctr.inbound.hasOwnProperty(m)) {
+                console.log("binding method", m, "for capability", cap);
+                port.on(m, contractFn(app, cap, m));
+              }
             console.log("connected port", port, "for", cap);
             return port;
           }, function (ex) {
