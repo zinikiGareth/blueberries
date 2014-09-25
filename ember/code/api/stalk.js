@@ -1,5 +1,6 @@
 import RenderContext from '../api/renderContext';
 import createServiceConnection from '../support/serviceconnection';
+import EnvelopeRestoreContract from '../envelope/contracts/restore';
 
 function provideStalkService(ctr, controller, cname) {
   var theService = controller.provideService(cname);
@@ -65,8 +66,9 @@ var StalkClass = Ember.Object.extend({
     var contracts = variety.get('contracts');
     for (var ctr in contracts) {
       if (contracts.hasOwnProperty(ctr)) {
-        cimpls[ctr] = contracts[ctr].create({card: blueberry, stalk: this});
-        services[ctr] = provideStalkService(cimpls[ctr], this.get('parent').get('controller'), ctr);
+        var ci = contracts[ctr].create({card: blueberry, stalk: this});
+        cimpls[ctr] = Ember.RSVP.resolve(ci);
+        services[ctr] = provideStalkService(ci, this.get('parent').get('controller'), ctr);
       }
     }
 
@@ -79,7 +81,6 @@ var StalkClass = Ember.Object.extend({
         simpls[s] = defn.create({card: blueberry, stalk: this, implementsContract: defn.implementsContract});
       }
     }
-
 
     // if we are at the top level, we need to wait for the "readyPromise" to resolve
     var readyPromise;
@@ -102,9 +103,14 @@ var StalkClass = Ember.Object.extend({
       readyPromise = Ember.RSVP.resolve({ mode: view.get('mode') });
     }
 
-    readyPromise.then(function(hash) {
-      // call the render contract, if any
-      var rc = cimpls['blueberries/contracts/render'];
+    // call the render contract, if any
+    var rcp = cimpls['blueberries/contracts/render'];
+    if (!rcp)
+      rcp = Ember.RSVP.resolve(null);
+
+    Ember.RSVP.all([rcp, readyPromise]).then(function(arr) {
+      var rc = arr[0];
+      var hash = arr[1];
       var tfn = null;
       var model = null;
       if (rc) {
@@ -185,6 +191,37 @@ var StalkClass = Ember.Object.extend({
         currentState.setState(objectId, stateId);
       }
     })
+  },
+  envelopeRender: function(envelope, variety, objectId) { // We can't use the state
+    var app = this.get('app');
+    var view = this.get('view');
+
+    // Create a model which we can share between things
+    var model = Ember.Object.create();
+
+    // Wire up the data contract
+    var ctr = 'blueberries/contracts/restore/object';
+    var erc = EnvelopeRestoreContract.create({card: null, stalk: this});
+    var restore = provideStalkService(erc, this.get('parent').get('controller'), ctr);
+    restore.subscribeTo(objectId, {
+      newVersion: function(obj) {
+        for (var v in obj)
+          if (obj.hasOwnProperty(v))
+            model.set(v, obj[v]);
+      }
+    });
+
+    // Render it as appropriate
+    Ember.RSVP.all([
+      app.getEnvelopeFor(envelope)
+    ]).then(function(resolvesTo) {
+      var env = resolvesTo[0];
+      if (env) {
+        view.set('template', env.template);
+        view.set('model', model); // shared state from above
+        view.rerender();
+      }
+    });
   }
 });
 

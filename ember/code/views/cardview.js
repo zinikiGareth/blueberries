@@ -5,7 +5,7 @@ import RestoreObject from '../contracts/restore/object';
 
 import CardController from '../controllers/card';
 
-function createStalk(parent, me, app, variety, domain, card, objectId, stateId) {
+function createStalk(parent, me, app, variety, envelope, domain, card, objectId, stateId) {
   var stalk = Stalk.create({
     app: app,
     view: me,
@@ -23,15 +23,18 @@ function createStalk(parent, me, app, variety, domain, card, objectId, stateId) 
 
   if (Ember.typeOf(variety) == 'instance') // the card is trusted - render here
     stalk.localRender(variety, domain, card, objectId, stateId);
-  else /* if we are not already an iframe */ // use Oasis
-    stalk.oasisRender(variety);
-  // TODO: else use envelopes
+  else if (app.get('mode') !== 'iframe') // use Oasis
+    stalk.oasisRender(variety, objectId, stateId);
+  else
+    stalk.envelopeRender(envelope, variety, objectId);
 }
 
 var cardView = Ember.View.extend({
   init: function() {
     this._super(arguments);
     Ember.guidFor(this);
+
+    this.set('classNames', ['cardView']);
 
     var app = this.get('container').lookup('application:main');
     this.set('app', app);
@@ -42,7 +45,7 @@ var cardView = Ember.View.extend({
 
     this.set('cardChildren', {});
   },
-  
+
   cardChanged: function() {
     var app = this.get('app');
     var domain = this.get('domain');
@@ -50,6 +53,7 @@ var cardView = Ember.View.extend({
     var canTrust;
     var stateId = null;
     var objectId = null;
+    var envelope = null;
     if (!domain)
       domain = app.get('domain');
     if (this.get('yoyo')) {
@@ -59,6 +63,9 @@ var cardView = Ember.View.extend({
       canTrust = this.get('yoyo.trust');
       if (!canTrust)
         canTrust = this.get('trust');
+      envelope = this.get('yoyo.envelope');
+      if (!envelope) // || !app.hasEnvelope(envelope)
+        envelope = this.get('envelope');
     } else {
       console.log("card has init", this);
       console.log("card objectid", this.get('objectId'));
@@ -66,6 +73,7 @@ var cardView = Ember.View.extend({
       objectId = this.get('objectId');
       stateId = this.get('cardState');
       canTrust = this.get('trust');
+      envelope = this.get('envelope');
     }
     if (domain == null || renderCard == null) {
       console.log("Cannot display card without valid domain and card", domain, renderCard);
@@ -80,7 +88,7 @@ var cardView = Ember.View.extend({
       // now attempt to lay our hands on the card variety
       renderCard = renderCard.toLowerCase();
       app.getCard(domain, renderCard, canTrust).then(function (variety) {
-          createStalk(self.get('parentView'), self, app, variety, domain, renderCard, objectId, stateId);
+          createStalk(self.get('parentView'), self, app, variety, envelope, domain, renderCard, objectId, stateId);
         },
         function(e) {
           console.log("error rendering card", e);
@@ -91,7 +99,6 @@ var cardView = Ember.View.extend({
 
 
   objectChanged: function() {
-    var store = this.get('app').get('cardStore');
     var objectId = this.get('objectId');
     // TODO: this handles the case where the expanded queue has its underlying id changed
     // we want to cancel any existing subscription and start a new one on the new objectId
@@ -107,7 +114,7 @@ var cardView = Ember.View.extend({
   bindChild: function(name, stalk) {
     this.get('cardChildren')[name] = stalk;
   },
-  classNames: ['cardView'],
+  classNames: null,
   toString: function() {
     return "a card view";
   }

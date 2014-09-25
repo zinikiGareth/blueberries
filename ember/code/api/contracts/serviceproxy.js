@@ -1,6 +1,9 @@
+// This appears to be duplicative of "contractFn" in the sandbox initializer
+// The difference is that seems to be implemented :-)
 function inboundHandlerFunction(port, name, m) {
   return function() {
     console.log("Need to handle request from container", arguments);
+    debugger;
 //    var x = [m].concat([Array.prototype.slice.call(arguments, 0)]);
 //    port.send.apply(port, x);
   }
